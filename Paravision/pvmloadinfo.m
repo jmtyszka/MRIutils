@@ -1,6 +1,9 @@
 function [info, status, errmsg] = pvmloadinfo(serdir)
 % [info, status, errmsg] = pvmloadinfo(serdir)
 %
+
+%
+gamma_1H = 42.57;
 % Load information from a PvM data directory.
 % Assumes that serdir contains a method file and
 % that the parent directory contains a subject text file.
@@ -13,14 +16,12 @@ function [info, status, errmsg] = pvmloadinfo(serdir)
 %          01/05/2004 JMT Update for CSI data
 %          02/09/2005 JMT Add support for G60 amps
 %          01/17/2006 JMT M-Lint corrections
-%          12/10/2007 JMT Add support for jmt_hyper, jmt_ddr and jmt_dr
-%          02/19/2008 JMT Add phase encoding order and start handling
 %
-% Copyright 2002-2008 California Institute of Technology.
+% Copyright 2002-2006 California Institute of Technology.
 % All rights reserved.
 
 % Default arg
-if nargin < 1; serdir = pwd; end
+if nargin < 1; serdir = '.'; end
 if strcmp(serdir,'.'); serdir = pwd; end
 
 % Default status 1 => everything ok
@@ -82,54 +83,17 @@ info.scanno = info.serno; % Duplicate for backwards consistency
 info.method  = parxextractstring(methodinfo, '##$Method=');
 info.vsize   = parxextractmatrix(methodinfo, '##$PVM_SpatResol=');
 info.slthick = parxextractdouble(methodinfo, '##$PVM_SliceThick=');
-info.slgap   = parxextractmatrix(methodinfo, '##$PVM_SPackArrSliceGap=');
-info.nslices = parxextractmatrix(methodinfo, '##$PVM_SPackArrNSlices=');
 info.dim     = parxextractmatrix(methodinfo, '##$PVM_Matrix=');
 info.sw      = parxextractdouble(methodinfo, '##$PVM_EffSWh=');
 info.te      = parxextractdouble(methodinfo, '##$PVM_EchoTime=');
+info.te_list = parxextractmatrix(methodinfo, '##$EffectiveTE=');
 info.tr      = parxextractdouble(methodinfo, '##$PVM_RepetitionTime=');
 info.ti      = parxextractdouble(methodinfo, '##$PVM_InversionTime=');
 info.navs    = parxextractdouble(methodinfo, '##$PVM_NAverages=');
 info.bw      = parxextractdouble(methodinfo, '##$PVM_EffSWh=');
 info.acqtime = parxextractstring2(methodinfo, '##$PVM_ScanTimeStr=');
 info.echopos = parxextractdouble(methodinfo, '##$PVM_EchoPosition=');
-
-% Phase encode ordering
-info.EncOrder1 = parxextractstring(methodinfo, '##$PVM_EncOrder1=');
-info.EncOrder2 = parxextractstring(methodinfo, '##$PVM_EncOrder2=');
-if isempty(info.EncOrder2); info.EncOrder2 = 'Unknown'; end
-
-% First phase encode dimension start
-if isempty(info.EncOrder1)
-  info.EncStart1 = -1.0;
-else
-  switch info.EncOrder1
-    case 'CENTRIC_ENC'
-      info.EncStart1 = 0.0;
-    case 'LINEAR_ENC'
-      info.EncStart1 = parxextractdouble(methodinfo, '##$PVM_EncStart1=');
-    otherwise
-      info.EncStart1 = -1.0;
-  end
-end
-
-% Second phase encode dimension start
-if ~isempty(info.EncOrder2)
-  info.EncStart2 = -1;
-else
-  switch info.EncOrder2
-    case 'CENTRIC_ENC'
-      info.EncStart2 = 0.0;
-    case 'LINEAR_ENC'
-      info.EncStart2 = parxextractdouble(methodinfo, '##$PVM_EncStart2=');
-    otherwise
-      info.EncStart2 = -1.0;
-  end
-end
-
-% Phase encoding line order
-info.EncSteps1 = parxextractmatrix(methodinfo, '##$PVM_EncSteps1=');
-info.EncSteps2 = parxextractmatrix(methodinfo, '##$PVM_EncSteps1=');
+info.anti_alias = parxextractmatrix(methodinfo, '##$PVM_AntiAlias=');
 
 % Echo position trap
 if isnan(info.echopos); info.echopos = 50.0; end
@@ -144,8 +108,7 @@ info.sw_offset_ppm = parxextractdouble(methodinfo, '##$PVM_SpecOffsetppm=');
 info.sloffset = parxextractdouble(methodinfo, '##$PVM_SPackSliceOffset=');
 info.rdoffset = parxextractdouble(methodinfo, '##$PVM_SPackReadOffset=');
 
-% Handle sequence-specific parameters
-
+% Handle conditional parameters
 switch lower(info.method)
   
   case 'bic_shim'
@@ -204,6 +167,7 @@ switch lower(info.method)
     info.uflare_echopath = 'AddedCoherently';
 
     info.esp = 0;
+    info.etl = 1;
     info.uflare_flip = 0;
     
     % Get diffusion-weighting information
@@ -227,6 +191,7 @@ switch lower(info.method)
     info.uflare_echopath = 'AddedCoherently';
 
     info.esp = 0;
+    info.etl = 1;
     info.uflare_flip = 0;
     
     % Get diffusion-weighting information
@@ -249,122 +214,12 @@ switch lower(info.method)
     info.G_tmspoil = parxextractdouble(methodinfo, '##$BIC_DWSTE_TMSpoilerAmp=');
     info.t_tmspoil = parxextractdouble(methodinfo, '##$BIC_DWSTE_TMSpoilerDuration=');
     
-  case 'rarevtr'
-    
-    % Default conditional parameters
-    info.uflare_echopath = 'AddedCoherently';
-    info.uflare_flip = 0;
-    info.esp = 0;
-
-    info.diffmode = 'No';
-    info.diffdir = [0 0 0];
-    info.bfactor = 0;
-    info.little_delta = 0;
-    info.big_delta = 0;
-    info.Gdiff = 0;
-
-    % Variable TR info
-    info.trs = parxextractmatrix(methodinfo, '##$MultiRepetitionTime=');
-    info.tr = info.trs(end);
-    info.nechoes = 1;
-    
-  case 'mge'
-    
-    % Default conditional parameters
-    info.uflare_echopath = 'AddedCoherently';
-    info.uflare_flip = 0;
-    info.esp = 0;
-    
-    info.diffmode = 'No';
-    info.diffdir = [0 0 0];
-    info.bfactor = 0;
-    info.little_delta = 0;
-    info.big_delta = 0;
-    info.Gdiff = 0;
-    
-    % MGE parameters
-    info.te = parxextractmatrix(methodinfo, '##$EffectiveTE=');
-    info.esp = parxextractdouble(methodinfo, '##$EchoSpacing=');
-
-  case 'epi'
-    
-    % Default conditional parameters
-    info.uflare_echopath = 'AddedCoherently';
-    info.uflare_flip = 0;
-    info.esp = 0;
-
-    info.diffmode = 'No';
-    info.diffdir = [0 0 0];
-    info.bfactor = 0;
-    info.little_delta = 0;
-    info.big_delta = 0;
-    info.Gdiff = 0;
-
-    % EPI parameters
-    info.te = parxextractdouble(methodinfo, '##$EchoTime=');
-    info.nshots = parxextractdouble(methodinfo, '##$PVM_EpiNShots=');
-    
-  case 'jmt_hyper'
-    
-    info.uflare_echopath = 'AddedCoherently';
-    info.uflare_flip = 0;
-    info.esp = 0;
-    
-    info.Hyper_Mode = parxextractstring(methodinfo,'##$Hyper_Mode=');
-    info.t_delta1 = parxextractdouble(methodinfo,'##$t_delta1=');
-    info.t_delta2 = parxextractdouble(methodinfo,'##$t_delta2=');
-    info.t_DELTA1 = parxextractdouble(methodinfo,'##$t_DELTA1=');
-    info.t_DELTA2 = parxextractdouble(methodinfo,'##$t_DELTA2=');
-    info.t_TE = parxextractdouble(methodinfo,'##$t_TE=');
-    info.t_TM = parxextractdouble(methodinfo,'##$t_TM=');
-    info.G_diff_ste = parxextractdouble(methodinfo,'##$G_diff_ste=');
-    info.G_diff_hyper = parxextractdouble(methodinfo,'##$G_diff_hyper=');
-    info.diff_dir_ste = parxextractmatrix(methodinfo,'##$v_diff_dir_ste=');
-    info.diff_dir_hyper = parxextractmatrix(methodinfo,'##$v_diff_dir_hyper=');
-    info.b_factor_ste = parxextractdouble(methodinfo,'##$b_factor_ste=');
-    info.b_factor_hyper = parxextractdouble(methodinfo,'##$b_factor_hyper=');
-    
-    % Extract RF pulse information
-    info.excpulse = pvmextractrfpulse(methodinfo, '##$ExcPulse=');
-    info.refpulse = pvmextractrfpulse(methodinfo, '##$RefPulse=');
-    info.alphapulse = pvmextractrfpulse(methodinfo, '##$MyPulse=');
-    
-    % Extract spoiler information
-    info.G_hspoil = parxextractdouble(methodinfo, '##$G_homospoil=');
-    info.t_hspoil = parxextractdouble(methodinfo, '##$t_homospoil=');
-    
-  case {'jmt_ddr','jmt_dr'}
-    
-    info.uflare_echopath = 'AddedCoherently';
-    info.uflare_flip = 0;
-
-    % Get RARE info
-    info.esp = parxextractdouble(methodinfo, '##$t_RARE_ESP=');
-    
-    % Get diffusion-weighting information
-    info.TE_DW = parxextractdouble(methodinfo, '##$t_TE_DW=');
-    info.diffdir = parxextractmatrix(methodinfo, '##$v_diff_dir=');
-    info.bfactor = parxextractdouble(methodinfo, '##$b_factor=');
-    info.delta1 = parxextractdouble(methodinfo, '##$t_delta1=');
-    info.delta2 = parxextractdouble(methodinfo, '##$t_delta2=');
-    info.delta3 = parxextractdouble(methodinfo, '##$t_delta3=');
-    info.delta4 = parxextractdouble(methodinfo, '##$t_delta4=');
-    info.Gdiff = parxextractdouble(methodinfo, '##$G_diff=');
-    info.diffmode = 'Yes'; % Constant on
-
-    % Extract RF pulse information
-    info.excpulse = pvmextractrfpulse(methodinfo, '##$ExcPulse=');
-    info.refpulse = pvmextractrfpulse(methodinfo, '##$RefPulse=');
-    
-    % Extract spoiler information
-    info.G_hspoil = parxextractdouble(methodinfo, '##$G_homospoil=');
-    info.t_hspoil = parxextractdouble(methodinfo, '##$t_homospoil=');
-    
   otherwise
     
     % Default conditional parameters
     info.uflare_echopath = 'AddedCoherently';
     info.esp = 0;
+    info.etl = 1;
     info.uflare_flip = 0;
     info.diffmode = 'No';
     info.diffdir = [0 0 0];
@@ -395,31 +250,30 @@ info.time = parxextractstring2(acqpinfo, '##$ACQ_time=');
 info.acq_scantime = parxextractdouble(acqpinfo, '##$ACQ_scan_time=')/1000; % seconds
 info.prefill = parxextractdouble(acqpinfo, '##$DSPFVS=');
 info.cf = parxextractdouble(acqpinfo, '##$BF1=');
-info.delays = parxextractmatrix(acqpinfo, '##$D='); 
 
 % Gradient calibration
 info.gradset = parxextractstring2(acqpinfo,'##$ACQ_status=');
 switch info.gradset
   case 'Micro2.5' % With 50A gradient amps
     info.gradcal = 406780; % Hz/cm at max gradient
-    info.maxgrad = info.gradcal / ((GAMMA_1H) / (2 * pi * 1e4)); % G/cm max gradient
+    info.maxgrad = info.gradcal / ((gamma_1H) / (2 * pi * 1e4)); % G/cm max gradient
     info.t_ramp = 80e-3; % Ramp time in ms
   case 'Micro2.5_G60' % With Great60 amps
     info.gradcal = 621233; % Hz/cm at max gradient
-    info.maxgrad = info.gradcal / ((GAMMA_1H) / (2 * pi * 1e4)); % G/cm max gradient
+    info.maxgrad = info.gradcal / ((gamma_1H) / (2 * pi * 1e4)); % G/cm max gradient
     info.t_ramp = 100e-3; % Ramp time in ms
   case 'S116' % 7T and 9.4T systems
     info.gradcal = 171499; % Hz/cm at max gradient
-    info.maxgrad = info.gradcal / ((GAMMA_1H) / (2 * pi * 1e4)); % G/cm max gradient
+    info.maxgrad = info.gradcal / ((gamma_1H) / (2 * pi * 1e4)); % G/cm max gradient
     info.t_ramp = 140e-3; % Ramp time in ms
   case 'S205'
     info.gradcal = 84000; % Hz/cm at max gradient
-    info.maxgrad = info.gradcal / ((GAMMA_1H) / (2 * pi * 1e4)); % G/cm max gradient
+    info.maxgrad = info.gradcal / ((gamma_1H) / (2 * pi * 1e4)); % G/cm max gradient
     info.t_ramp = 300e-3; % Ramp time in ms
   otherwise
     % Default gradient set 1G/cm max grad, 1ms ramp time
     info.gradcal = 4258; % Hz/cm at max gradient
-    info.maxgrad = info.gradcal / ((GAMMA_1H) / (2 * pi * 1e4)); % 1.0 G/cm max gradient
+    info.maxgrad = info.gradcal / ((gamma_1H) / (2 * pi * 1e4)); % 1.0 G/cm max gradient
     info.t_ramp = 1.0; % Ramp time in ms
 end
 
@@ -561,36 +415,24 @@ end
 
 % Fill 4D recon spatial dimensions
 switch info.ndim
-  
   case 1 % 1D
-  
     info.recodim(3:4,1) = info.nreps;
     info.fov = [info.fov(1); 0.0; 0.0; 0.0];
-
   case 2 % 2D
-  
     info.recodim(1:2,1) = info.recodim(1:2);
     info.recodim(3,1) = info.nims;
     info.recodim(4,1) = info.nreps;
-    info.fov = [info.fov(1:2); (info.slthick + info.slgap(1)) * info.nslices(1); 0.0];
-    info.vsize = info.fov(1:2) ./ (info.recodim(1:2) + eps) * 1e3; % microns
-    info.vsize(3) = (info.slthick + info.slgap(1)) * 1e3; % microns
-    info.fov = [info.fov(1:3); 0.0];
-
+    info.fov = [info.fov(1:2); 0.0; 0.0];
   case 3 % 3D
-  
     info.recodim(1:3,1) = info.recodim(1:3);
     info.recodim(4,1) = info.nreps * info.nims;
-    info.fov = [info.fov(1:3); 0.0]; 
-
+    info.fov = [info.fov(1:3); 0.0];
   otherwise
-
     % Do nothing - may require special handling in future
-
 end
 
-% Recalculate voxel size vector
-info.vsize = info.fov ./ (info.recodim + eps) * 1e3; % microns
+% Calculate voxel size in um from FOV and recon'd matrix
+info.vsize = info.fov ./ (info.recodim + eps) * 1e3;
 
 % Adjust read direction voxel size for displaced UFLARE
 if isequal(info.uflare_echopath,'Displaced')

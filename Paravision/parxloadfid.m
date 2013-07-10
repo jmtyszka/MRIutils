@@ -26,9 +26,6 @@ function [k,info,errmsg] = parxloadfid(scandir)
 % Copyright 2000-2006 California Institute of Technology.
 % All rights reserved.
 
-% Flag for Paravision versions < 4x
-older_parx = 0;
-
 % Check for PvM method data
 if isequal(parxacqmeth(scandir),'pvm')
   [k,info,errmsg] = pvmloadfid(scandir);
@@ -76,24 +73,16 @@ ny = info.sampdim(2);
 nz = info.sampdim(3);
 ni = info.sampdim(4);
 
-% Handle digital filter acquisition for Pv versions < 4x
+% Handle digital filter acquisition
 % Pv pads filter samples < 128 to 128 points in fid
-if older_parx
-
-  if nx < 128
-    nx_dig = 128;
-  else
-    nx_dig = nx;
-  end
-
-  % Round up to nearest whole power of 2
-  nx_dig = 2^(ceil(log(nx_dig)/log(2)));
-  
+if nx < 128
+  nx_dig = 128;
 else
-  
   nx_dig = nx;
-  
 end
+
+% Round up to nearest whole power of 2
+nx_dig = 2^(ceil(log(nx_dig)/log(2)));
 
 % Total samples of k-space
 nsamps = nx_dig * ny * nz * ni * 2;

@@ -7,6 +7,14 @@ function [info, status, errmsg] = parxloadinfo(serdir)
 % Non-essential missing information (eg patient name)
 % is filled with sensible default values.
 %
+
+%
+
+%
+
+%
+
+gamma_1H = 42.57
 % AUTHOR : Mike Tyszka, Ph.D.
 % PLACE  : Caltech BIC
 % DATES  : 10/05/2000 JMT From scratch

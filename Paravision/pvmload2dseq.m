@@ -21,6 +21,8 @@ function [s, info, errmsg] = pvmload2dseq(scandir)
 %          04/04/2003 JMT Add support for PvM
 %          08/23/2004 JMT Complete recotx support and vsize reordering
 %          01/17/2006 JMT M-Lint corrections
+%		   02/22/2013 SRB Changed from recodim to dim to hadle oversampling
+%		   07/08/2013 SRB Fixed rescaling bug
 %
 % Copyright 2000-2006 California Institute of Technology.
 % All rights reserved.
@@ -81,24 +83,52 @@ end
 % Close the file
 fclose(fd);
 
-if (prod(info.recodim) ~= length(d))
-  errmsg = sprintf('2dseq file is incomplete (%d expected, %d loaded)', prod(info.recodim), length(d));
+% Modify dimensions for anti aliasing (oversampling)
+for n=1:length(info.anti_alias)
+	info.recodim(n) = info.recodim(n)/info.anti_alias(n);
+end
+
+% Should handle different cases (oversampling, repetitions, multiple
+% echoes, etc)
+if (prod(info.recodim) ~= length(d) && prod(info.dim)*info.nreps*info.nims ~= length(d))
+  errmsg = sprintf('2dseq file is incomplete (%d expected, %d loaded)', prod(info.dim), length(d));
   return
 end
+
+% Sam Barnes 7-2-2013
+% The rescaling was done incorrectly (should have used map_slope, map_offset)
+% using the max and min values as below will not work; also map_slope was 
+% substituted for map_min
+% Images now properly rescaled using map_slope and map_offset, rescaled on
+% a per slice basis and warning generated if slices were scaled differently
 
 % Rescale values for quantitation
 % Use the map parameters in the RECO header
 % Assume all slices have same map scaling (JMT 4/22/2002)
-cal_min = info.map_slope(1); % Calibrated minimum
-cal_max = info.map_max(1);   % Calibrated maximum
-vox_min = info.minima(1);    % Voxel minimum
-vox_max = info.maxima(1);    % Voxel maximum
+% cal_min = info.map_slope(1); % Calibrated minimum
+% cal_max = info.map_max(1);   % Calibrated maximum
+% vox_min = info.minima(1);    % Voxel minimum
+% vox_max = info.maxima(1);    % Voxel maximum
+% 
+% % Calibrate the grayscale transform slope
+% map_slope = (cal_max - cal_min) / (vox_max - vox_min);
+% 
+% % Apply linear calibration function
+% d = (d - vox_min) * map_slope + cal_min;
 
-% Calibrate the grayscale transform slope
-map_slope = (cal_max - cal_min) / (vox_max - vox_min);
+% Recale int values back to floating point values used during reco
+% Check all scaling was done the same for each slice
+for n=1:size(info.map_slope,1)
+	if info.map_slope(1)~=info.map_slope(n) || info.map_offset(1)~=info.map_offset(n)
+		warning('Scaling values not identical for all slices');
+	end
 
-% Apply linear calibration function
-d = (d - vox_min) * map_slope + cal_min;
+	image_length = length(d)/size(info.map_slope,1);
+	% See Bruker documentation section 7.17.3 page D-7-28
+	d((n-1)*image_length+1:n*image_length) = d((n-1)*image_length+1:n*image_length)/info.map_slope(n) + info.map_offset(n);
+end
+% Add marking to info saying scaling was done
+info.image_scaled = true;
 
 % Apply transposition
 switch info.recotx(1)
@@ -120,3 +150,6 @@ end
 
 % Reshape the data
 s = reshape(d, info.recodim');
+
+
+

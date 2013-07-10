@@ -1,60 +1,50 @@
-function parxls(studydir)
-% parxls(studydir)
+function parxls(examdir)
+% parxls(examdir)
 %
-% Create a summary list of all Paravision scans in an study directory
+% Create a summary list of all PARX series in an exam directory
 %
 % ARGS:
-% studydir = study directory containing numbered scan directories
+% examdir = root directory of exam
+%
+% RETURNS:
+% serlist = structure array containing info about each series in exam 
 %
 % AUTHOR : Mike Tyszka, Ph.D.
 % PLACE  : Caltech BIC
-% DATES  : 04/26/2001 JMT From scratch
+% DATES  : 04/26/2001 From scratch
 %          01/17/2006 JMT M-Lint corrections
-%          08/03/2006 JMT Sort scan numbers in listing
 %
 % Copyright 2000-2006 California Institute of Technology.
 % All rights reserved.
 
 % Defaults
-if nargin < 1; studydir = pwd; end
+if nargin < 1; examdir = pwd; end
 
 % Get the exam directory list
-dirlist = dir(studydir);
+dirlist = dir(examdir);
 
-% First pass: find numbered scan directories
-scanlist = [];
-count = 0;
-for dc = 1:length(dirlist)
+% Loop over all entries
+for d = 1:length(dirlist)
 
-  sno = str2double(dirlist(dc).name);
-  if ~isempty(sno)
-    count = count + 1;
-    scanlist(count) = sno;
-  end
-    
-end
-
-% Sort scanlist ascending
-scanlist = sort(scanlist,'ascend');
-
-% Header
-fprintf('%-3s %8s %8s %6s %2s %4s %4s %4s %6s %6s %6s\n',...
-  '#','Method','TR ms','TE ms','NA','nx','ny','nz','vx','vy','vz');
-
-% Second pass: list paravision information for each scan
-for sc = 1:length(scanlist)
+  % Extract the
+  this_dir = dirlist(d).name;
+  this_path = [examdir '\' this_dir];
   
-  % Load the scan information
-  [info, status] = parxloadinfo(fullfile(studydir,num2str(scanlist(sc))));
+  % Only look at subdirectories
+  if ~strcmp(this_dir, '.') && ...
+      ~strcmp(this_dir, '..') && ...
+      dirlist(d).isdir
+
+    % Load the series information
+    [info, status] = parxloadinfo(this_path);
     
-  if status == 1
+    if status == 1
       
-    fprintf('%-3d %8s %8.1f %6.1f %2d %4d %4d %4d %6.1f %6.1f %6.1f\n',...
-      scanlist(sc), info.method, info.tr, info.te(1),...
-      info.navs,...
-      info.recodim(1), info.recodim(2), info.recodim(3),...
-      info.vsize(1), info.vsize(2), info.vsize(3));
-            
+      % Print a formated line for this series
+      parxdump(info);
+      
+    end
+   
   end
-  
+    
 end

@@ -21,13 +21,10 @@ if nargin < 1
   return
 end
 
-% Basic info
-fprintf('%d,', info.scanno);
-fprintf('%s,', info.method);
-
-% Timing and averages
-fprintf('%0.1f,%0.1f,%d,',...
-  info.tr, info.te, info.navs);
+fprintf('%-4d', info.serno);
+fprintf('%-16s', info.name);
+fprintf('%-12s', info.method);
+fprintf('%5.0f/%-5.0f ', info.tr, info.te);
 
 if isfield(info,'dim')
   ndim = length(info.dim);
@@ -36,21 +33,27 @@ else
 end
 
 % Matrix size
-for d = 1:3
-  fprintf('%d,', info.sampdim(d));
+switch ndim
+case 0
+case 1
+  fprintf('%d ', info.dim(1));
+otherwise
+  for d = 1:(ndim-1)
+    fprintf('%dx', info.dim(d));
+  end
+  fprintf('%d ', info.dim(ndim));
 end
 
 % FOV size
-for d = 1:3
-  fprintf('%0.1f,', info.fov(d));
-end
-
-% Slice thickness
-fprintf('%0.2f,', info.slthick);
-
-% b factor is present
-if isfield(info,'bfactor')
-  fprintf('%0.1f',info.bfactor);
+switch ndim
+case 0
+case 1
+  fprintf('%0.1f ', info.fov(1));
+otherwise
+  for d = 1:(ndim-1)
+    fprintf('%0.1fx', info.fov(d));
+  end
+  fprintf('%0.1f ', info.fov(ndim));
 end
 
 fprintf('\n');

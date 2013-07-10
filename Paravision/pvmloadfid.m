@@ -22,9 +22,6 @@ function [k,info,errmsg] = pvmloadfid(serdir)
 % Copyright 2002-2006 California Institute of Technology.
 % All rights reserved.
 
-% Flag for Paravision versions < 4x
-older_parx = 0;
-
 % Initialize return args
 k = [];
 
@@ -69,10 +66,9 @@ fclose(fd);
 nx = info.sampdim(1);
 ny = info.sampdim(2);
 nz = info.sampdim(3);
-ni = info.sampdim(4);
+ni = info.sampdim(4)/2;
 
-% Handle digital filter acquisition for Pv versions < 4x
-% Pv pads filter samples < 128 to 128 points in fid
+% Handle digital filter acquisition
 if nx < 128
   nx_dig = 128;
 else
@@ -100,35 +96,22 @@ end
 % Recompose into a complex vector
 d = complex(d(1:2:nsamps),d(2:2:nsamps));
 
-% Reshape the dataset to account for RARE echo train length
+% Reshape the dataset
 if info.etl > 1
-
   k = reshape(d, nx_dig, info.etl, ny/info.etl, nz);
   k = permute(k, [1 3 2 4]);
   k = reshape(k, nx_dig, ny, nz);
-
 else
-  
   switch info.ndim
-    
     case 2
-
       % 2D data organized as (X,TE,Z,Y) where Z is the slice dimension
       k = squeeze(reshape(d, nx_dig, ni, nz, ny));
-      
       % Reorder dimensions to (X,Y,Z,TE)
       k = permute(k,[1 4 3 2]);
-
+      % Handle multiecho multislice 2D
     case 3
-      
-      % Data organized as (X,TE,Y,Z)
-      k = squeeze(reshape(d, nx_dig, ni, ny, nz));
-      
-      % Reorder dimensions to (X,Y,Z,TE)
-      k = permute(k,[1 3 4 2]);
-      
+      k = squeeze(reshape(d, nx_dig, ny, nz, ni));
   end
-  
 end
 
 % Discard the digitizer zero padding if present (nx < 128)
