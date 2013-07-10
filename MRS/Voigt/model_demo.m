@@ -1,0 +1,31 @@
+function model_demo
+%
+% model_demo
+%
+% AUTHOR : Mike Tyszka, Ph.D.
+% PLACE  : Caltech BIC
+% DATES  : 4/28/00 Start from scratch
+
+n = 1024;
+
+BW = 400;  % Hz
+CF = 64;   % MHz
+DF = -130; % Hz
+
+fmax = (BW / 2 - DF) / CF;
+fmin = (-BW / 2 - DF) / CF;
+
+df = (fmax - fmin) / (n-1);
+
+f = fmin:df:fmax;
+
+I = [1 0.5 0.5 4];
+f0 = [2.0 3.0 3.2 4.7];
+gL = [0.05 0.05 0.05 0.05];
+gD = [0.05 0.05 0.05 0.05];
+phi = [0 0 0 0];
+
+s = model_mrs(f, I, f0, gL, gD, phi);
+
+plot(f, real(s), f, imag(s)); set(gca, 'XDir', 'reverse');
+

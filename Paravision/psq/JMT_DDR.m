@@ -1,0 +1,213 @@
+function [t,B1t,Gx,Gy,Gz,kinv] = JMT_DDR(opts)
+% [t,B1t,Gx,Gy,Gz,kinv] = JMT_DDR(opts)
+%
+% Generate waveforms for double-echo prep DWRARE sequence.
+% Currently ignores RARE b-matrix - calculates double echo prep
+% b-matrix only.
+%
+% ARGS :
+% opts  = DWSE options structure :
+%   .TE         = echo time (s)
+%   .t_90       = excitation pulse width (s)
+%   .t_180      = excitation pulse width (s)
+%   .t_ramp     = gradient ramp time (s)
+%   .t_hspoil   = homospoil duration (s)
+%   .FOV        = FOV (m)
+%   .Nx         = readout samples
+%   .ReadBW     = readout bandwidth (Hz)
+%   .SliceThick = slice thickness (mm)
+%   .RFwave     = RF waveform name
+%   .TB         = time-bandwidth product of RF pulses (s Hz)
+%   .G_homo     = homospoiler amplitude (T/m)
+%   .delta1     = delta1 (s)
+%   .delta2     = delta2 (s)
+%   .delta3     = delta3 (s)
+%   .delta4     = delta4 (s)
+%   .G_diff       = diffusion encoding gradient amp (T/m)
+%   .diff_vec     = diffusion encoding direction vector [x y z]
+%
+% RETURNS :
+% t        = time vector (s)
+% B1t      = RF transmit waveform (T)
+% Gx,Gy,Gz = gradient waveforms (T)
+% kinv     = location of k-space inversion points
+%            due to 180 refocusing pulses (s)
+%
+% AUTHOR : Mike Tyszka, Ph.D.
+% PLACE  : Caltech BIC
+% DATES  : 01/08/2008 JMT Adapt from DW_SE.m
+%          06/20/2008 JMT Fix timing bugs
+%
+% Copyright 2008 California Institute of Technology.
+% All rights reserved.
+
+% Utility variables
+tramp = opts.t_ramp;
+
+%-------------------------------------------------------------
+% Precalculate sequence parameters
+%-------------------------------------------------------------
+
+t_acq = opts.Nx / opts.ReadBW; 
+SliceBW = opts.TB / opts.t_90;
+
+%-------------------------------------------------------------
+% Calculate read gradient time before echo
+%-------------------------------------------------------------
+
+t_acq_wait = opts.t_hspoil - tramp;
+
+%-------------------------------------------------------------
+% Estimate total time range of sequence and construct time vector
+%-------------------------------------------------------------
+
+% Temporal sampling interval (4us)
+dt = 4e-6;
+
+% Update
+Ttot = opts.t_90/2 + opts.TE + t_acq * (1-opts.echopos/100) + tramp + opts.t_hspoil;
+
+% Extend sampling interval by 10%
+t = (-Ttot * 0.1):dt:(Ttot * 1.1);
+
+%-------------------------------------------------------------
+% Initialize return vectors
+%-------------------------------------------------------------
+
+B1t = zeros(size(t));
+Gx = B1t;
+Gy = B1t;
+Gz = B1t;
+
+%-------------------------------------------------------------
+% Gradients in T/m
+%-------------------------------------------------------------
+
+gam = GAMMA_1H / (2 * pi);
+G_read = opts.ReadBW / (gam * opts.FOV);
+G_slice = SliceBW / (gam * opts.SliceThick);
+G_readdeph = (G_read * (tramp/2 + t_acq_wait + t_acq * opts.echopos/100)) / (opts.t_hspoil - tramp);
+
+M_slref = G_slice * (opts.t_90 + tramp)/2;
+
+%-------------------------------------------------------------
+% Timing parameters in seconds
+%-------------------------------------------------------------
+
+% RF padding delay
+t_rfpad = opts.rfpad;
+
+% Refocus group duration (t_hspoil is for full trapezoid)
+t_refgroup = opts.t_180 + (opts.t_hspoil + t_rfpad) * 2;
+
+% Calculate double echo preparation TE
+t_TE_DW =   opts.t_90/2 + tramp + opts.delta1 + tramp + t_refgroup + ...
+  opts.delta2 + tramp + opts.delta3 + tramp + ...
+  t_refgroup + opts.delta4 + tramp + ...
+  tramp + t_acq_wait + (t_acq * opts.echopos/100);
+
+% RF Pulse waveform start points
+% t = 0 at midpoint of 90
+t0_90 = -opts.t_90/2;
+t0_180_1 = t_TE_DW * 0.25 - opts.t_180/2;
+t0_180_2 = t_TE_DW * 0.75 - opts.t_180/2;
+
+% Note: RF pad delays before and after 180s, but not after 90 (see .ppg)
+t0_prespoil_1 = t0_180_1 - t_rfpad - opts.t_hspoil;
+t0_postspoil_1 = t0_180_1 + opts.t_180 + t_rfpad;
+t0_prespoil_2 = t0_180_2 - t_rfpad - opts.t_hspoil;
+t0_postspoil_2 = t0_180_2 + opts.t_180 + t_rfpad;
+
+t0_read = opts.echoloc - (t_acq * opts.echopos/100) - t_acq_wait - tramp;
+
+t0_gdiff_1 = opts.t_90/2 + tramp;
+t0_gdiff_2 = t0_gdiff_1 + opts.delta1 + tramp + t_refgroup;
+t0_gdiff_3 = t0_gdiff_2 + opts.delta2 + tramp;
+t0_gdiff_4 = t0_gdiff_3 + opts.delta3 + tramp + t_refgroup;
+
+% Adjust pre-180 homospoil moment for slice refocusing
+G_prespoil = (opts.G_hspoil * (opts.t_hspoil - tramp) - M_slref) / (opts.t_hspoil - tramp);
+
+%-------------------------------------------------------------
+% Summary
+%-------------------------------------------------------------
+
+if opts.verbose
+
+  fprintf('\n');
+  fprintf('JMT_DDR Pulse Sequence\n');
+  fprintf('----------------------\n');
+  fprintf('TIMINGS:\n');
+  fprintf('  TE_DW (seq) : %0.3f ms\n', opts.TE * 1e3);
+  fprintf('  TE_DW (sim) : %0.3f ms\n', t_TE_DW * 1e3);
+  fprintf('  Acq Time    : %0.3f ms\n', t_acq * 1e3);
+  fprintf('  Read BW     : %0.1f kHz\n', opts.ReadBW / 1e3);
+  fprintf('  Slice BW    : %0.1f kHz\n', SliceBW / 1e3);
+  fprintf('GRADIENTS:\n');
+  fprintf('  Read        : %0.3f G/cm\n', G_read * 100);
+  fprintf('  Read Deph   : %0.3f G/cm\n', G_readdeph * 100);
+  fprintf('\n');
+  
+end
+
+%-------------------------------------------------------------
+% Diffusion-weighted stimulated echo pulse sequence
+%-------------------------------------------------------------
+
+% 90 excitation RF pulse
+B1t = RFWave(t,B1t,opts.RFwave,90.0,0.0,t0_90,opts.t_90);
+
+% First 180 refocus RF pulse
+B1t = RFWave(t,B1t,opts.RFwave,180.0,0.0,t0_180_1,opts.t_180);
+
+% Second 180 refocus RF pulse
+B1t = RFWave(t,B1t,opts.RFwave,180.0,0.0,t0_180_2,opts.t_180);
+
+% Excite slice select gradient
+Gz = GradTrap(t,Gz,G_slice,t0_90-tramp,tramp,opts.t_90);
+
+% Pre-180 homospoil 1 (bridged to refocus slice select)
+Gz = GradTrap(t,Gz,G_prespoil,t0_prespoil_1,tramp,opts.t_hspoil-2*tramp);
+
+% Post-180 homospoil 1 (bridged to refocus slice select)
+Gz = GradTrap(t,Gz,opts.G_hspoil,t0_postspoil_1,tramp,opts.t_hspoil-2*tramp);
+
+% Pre-180 homospoil 2 (bridged to refocus slice select)
+Gz = GradTrap(t,Gz,G_prespoil,t0_prespoil_2,tramp,opts.t_hspoil-2*tramp);
+
+% Post-180 homospoil 2 (bridged to refocus slice select)
+Gz = GradTrap(t,Gz,opts.G_hspoil,t0_postspoil_2,tramp,opts.t_hspoil-2*tramp);
+
+% Read gradient
+Gx = GradTrap(t,Gx,G_read,t0_read,tramp,t_acq_wait+t_acq+t_acq_wait);
+
+% Read dephase
+Gx = GradTrap(t,Gx,G_readdeph,t0_prespoil_2,tramp,opts.t_hspoil-2*tramp);
+
+%--------------------------------------------------------------------
+% Diffusion weighting pulses
+%--------------------------------------------------------------------
+
+Gd = opts.G_diff * opts.diff_vec;
+
+Gx = GradTrap(t,Gx,Gd(1),t0_gdiff_1,tramp,opts.delta1-tramp);
+Gy = GradTrap(t,Gy,Gd(2),t0_gdiff_1,tramp,opts.delta1-tramp);
+Gz = GradTrap(t,Gz,Gd(3),t0_gdiff_1,tramp,opts.delta1-tramp);
+
+Gx = GradTrap(t,Gx,-Gd(1),t0_gdiff_2,tramp,opts.delta2-tramp);
+Gy = GradTrap(t,Gy,-Gd(2),t0_gdiff_2,tramp,opts.delta2-tramp);
+Gz = GradTrap(t,Gz,-Gd(3),t0_gdiff_2,tramp,opts.delta2-tramp);
+
+Gx = GradTrap(t,Gx,Gd(1),t0_gdiff_3,tramp,opts.delta3-tramp);
+Gy = GradTrap(t,Gy,Gd(2),t0_gdiff_3,tramp,opts.delta3-tramp);
+Gz = GradTrap(t,Gz,Gd(3),t0_gdiff_3,tramp,opts.delta3-tramp);
+
+Gx = GradTrap(t,Gx,-Gd(1),t0_gdiff_4,tramp,opts.delta4-tramp);
+Gy = GradTrap(t,Gy,-Gd(2),t0_gdiff_4,tramp,opts.delta4-tramp);
+Gz = GradTrap(t,Gz,-Gd(3),t0_gdiff_4,tramp,opts.delta4-tramp);
+
+%--------------------------------------------------------------------
+% k-space inversion points
+%--------------------------------------------------------------------
+
+kinv = {0.25 * t_TE_DW, 0.75 * t_TE_DW};

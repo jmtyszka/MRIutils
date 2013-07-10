@@ -1,0 +1,14 @@
+-------------------------------
+ICA cleanup
+-------------------------------
+Date                   : 09-Jul-2013 09:39:50
+EPI file               : /Users/jmt/Documents/MATLAB/MRIutils_2.0/FSL/ICA_Cleanup/video_8.nii.gz
+TR                     : 2.000 s
+(Hifreq) Freq Cutoff   : 0.100
+(Hifreq) Pspec Frac    : 0.330
+(Nyquist) Corr Thresh  : 0.400
+(Nyquist) Score Thresh : 1
+(Outside) Frac Thresh  : 5.000000e-01
+Overwrite ICA          : 0
+ICA Dimensions         : 50
+
