@@ -15,7 +15,7 @@ function [is_hifreq, hifreq_frac] = find_hifreq_ics(IC_tmodes, TR, hifreq_cutoff
 % All rights reserved.
 
 % Output flag
-do_figure = 1;
+do_figure = false;
 
 % Require all arguments
 if nargin < 1
@@ -77,7 +77,7 @@ is_hifreq = is_hifreq(:)';
 
 if do_figure
   
-  figure(20); clf; colormap(hot);
+  figure(10); clf; colormap(hot);
   
   % Sort ICs in order of fraction of power > cutoff
   [~, order] = sort(hifreq_frac);

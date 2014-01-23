@@ -16,6 +16,7 @@ function ica_cleanup(epi_file, options)
 %          01/24/2013 JMT Switch to using spatial correlation with Nyq mask
 %          04/04/2013 JMT Merge low pass and Nyquist cleanup - add options structure
 %          07/08/2013 JMT Add detection of ICs outside brain
+%          01/17/2014 JMT Remove all spatial masking
 %
 % Copyright 2011-2013 California Institute of Technology.
 % All rights reserved.
@@ -32,14 +33,14 @@ if ~all_ok
 end
 
 % Extract options fields
-TR             = options.TR;
-freq_cutoff    = options.freq_cutoff;
-pspec_frac     = options.pspec_frac;
-corr_thresh    = options.corr_thresh;
-score_thresh   = options.score_thresh;
-outside_thresh = options.outside_thresh;
-overwrite_ica  = options.overwrite_ica;
-ica_dim        = options.ica_dim;
+TR                   = options.TR;
+overwrite_ica        = options.overwrite_ica;
+do_glm               = options.do_glm;
+highfreq_cutoff      = options.highfreq_cutoff;
+highfreq_frac        = options.highfreq_frac;
+nyquist_corr_thresh  = options.nyquist_corr_thresh;
+nyquist_score_thresh = options.nyquist_score_thresh;
+slicebg_score_thresh = options.slicebg_score_thresh;
 
 % FSL environment
 FSL_DIR = getenv('FSL_DIR');
@@ -67,73 +68,49 @@ end
 epi_file = fullfile(epi_dir, [epi_stub epi_ext]);
 
 % Create log file in same directory as EPI file
-log_file = fullfile(epi_dir,'ica_deghost.log');
+log_file = fullfile(epi_dir,'ica_cleanup.log');
 logfd = fopen(log_file,'w');
 if logfd < 0
   fprintf('*** Problem opening %s to write\n', log_file);
   return
 end
 
-% Header splash
-fprintf('-------------------------------\n');
-fprintf('ICA cleanup\n');
-fprintf('-------------------------------\n');
-fprintf('Date                   : %s\n', datestr(now));
-fprintf('EPI file               : %s\n', epi_file);
-fprintf('TR                     : %0.3f s\n', TR);
-fprintf('(Hifreq) Freq Cutoff   : %0.3f\n', freq_cutoff);
-fprintf('(Hifreq) Pspec Frac    : %0.3f\n', pspec_frac);
-fprintf('(Nyquist) Corr Thresh  : %0.3f\n', nyquist_corr_thresh);
-fprintf('(Nyquist) Score Thresh : %d\n', nyqsuit_score_thresh);
-fprintf('(Outside) Frac Thresh  : %d\n', outside_frac_thresh);
-fprintf('(Outside) Score Thresh : %d\n', outside_score_thresh);
-fprintf('Overwrite ICA          : %d\n', overwrite_ica);
-fprintf('ICA Dimensions         : %d\n', ica_dim);
-fprintf('\n');
-
-% Init log file with header
-fprintf(logfd, '-------------------------------\n');
-fprintf(logfd, 'ICA cleanup\n');
-fprintf(logfd, '-------------------------------\n');
-fprintf(logfd, 'Date                   : %s\n', datestr(now));
-fprintf(logfd, 'EPI file               : %s\n', epi_file);
-fprintf(logfd, 'TR                     : %0.3f s\n', TR);
-fprintf(logfd, '(Hifreq) Freq Cutoff   : %0.3f\n', freq_cutoff);
-fprintf(logfd, '(Hifreq) Pspec Frac    : %0.3f\n', pspec_frac);
-fprintf(logfd, '(Nyquist) Corr Thresh  : %0.3f\n', nyquist_corr_thresh);
-fprintf(logfd, '(Nyquist) Score Thresh : %d\n', nyquist_score_thresh);
-fprintf(logfd, '(Outside) Frac Thresh  : %0.3f\n', outside_frac_thresh);
-fprintf(logfd, '(Outside) Score Thresh : %d\n', outside_score_thresh);
-fprintf(logfd, 'Overwrite ICA          : %d\n', overwrite_ica);
-fprintf(logfd, 'ICA Dimensions         : %d\n', ica_dim);
-fprintf(logfd, '\n');
+% Dump options to command window and log file
+ica_cleanup_options('dump', options, 1);
+ica_cleanup_options('dump', options, logfd);
 
 % Key .feat subdirectories
 % Assumes ICA was run during FEAT preprocessing, not independently
 ica_dir = fullfile(epi_dir, [epi_stub '.ica']);
 
 if exist(ica_dir,'dir')
-
+  
   if overwrite_ica
     fprintf('Overwriting previous ICA results\n');
   else
     fprintf('Using previous ICA results\n');
   end
-
+  
 end
 
 % Rerun melodic if overwrite flag is true
 if overwrite_ica
   
+  % Remove any previous ICA directory
   if exist(ica_dir,'dir')
     rmdir(ica_dir,'s');
     mkdir(ica_dir);
   end
-
+  
   % Construct melodic command
-  cmd = sprintf('%s -i %s -o %s --nobet --bgthreshold=1 --tr=%0.3f --dim=%d --report', melodic_cmd, epi_file, ica_dir, TR, ica_dim);
-  fprintf('Running : %s\n', cmd);
+  % Switch off all masking so that melodic runs on the entire volume
+  % including air-space structured artifact regions.
+  cmd = sprintf('%s -i %s -o %s --nomask --update_mask --nobet --bgthreshold=0 --vn --no_mm --tr=%0.3f --report --Oall', ...
+    melodic_cmd, epi_file, ica_dir, TR);
 
+  
+  fprintf('Running : %s\n', cmd);
+  
   % Run melodic command in shell
   try
     system(cmd);
@@ -165,7 +142,7 @@ if isempty(ic_tmodes)
   return
 end
 
-%% Create Nyquist mask
+%% Construct signed Nyquist mask
 
 % Load mean image from ICA directory
 mean_image = fullfile(ica_dir,'mean.nii.gz');
@@ -182,27 +159,44 @@ mask = s > th;
 ny = size(mask,2);
 nyquist_mask = circshift(mask,[0 fix(ny/2) 0]);
 
-%% Search for each class of nuisance ICs
+% Subtract original mask from shifted mask to create bipolar mask
+% Empirically, the Nyquist ICs contain both the original region and the
+% shifted ghost, which have opposite signs from each other.
+nyquist_mask = nyquist_mask - mask;
 
-% Identify broadband IC temporal modes (physiological ICs in rsBOLD)
-[is_hifreq, hifreq_frac] = find_hifreq_ics(ic_tmodes, TR, freq_cutoff, pspec_frac);
+%% Nyquist ICs
+
+fprintf('Finding Nyquist ghost ICs\n');
 
 % Identify IC spatial modes strongly correlated with Nyquist pattern
-[is_nyquist, nyquist_score] = find_nyquist_ics(ic_smodes, nyquist_mask, corr_thresh, score_thresh);
+[is_nyquist, nyquist_score] = find_nyquist_ics(ic_smodes, nyquist_mask, nyquist_corr_thresh, nyquist_score_thresh);
 
-% Find IC spatial modes
-[is_outside, outside_frac] = find_outside_ics(ic_smodes, mask, outside_thresh);
+%% Slice Background ICs
 
-% Number of ICs
+fprintf('Finding slice background ICs\n');
+
+% Identify IC spatial modes with isolated high slice background signal
+[is_slicebg, max_slicebg_score] = find_slicebg_ics(ic_smodes, mask, slicebg_score_thresh);
+
+%% High Frequency ICs
+
+fprintf('Finding high temporal frequency ICs\n');
+
+% Identify broadband IC temporal modes (physiological ICs in rsBOLD)
+[is_hifreq, hifreq_frac] = find_hifreq_ics(ic_tmodes, TR, highfreq_cutoff, highfreq_frac);
+
+%% Merge Bad IC Lists
+
+% Total number of ICs
 nics = length(is_hifreq);
 
 % Merge bad IC indices
-is_bad = is_hifreq | is_nyquist | is_outside ;
+is_bad = is_hifreq | is_nyquist | is_slicebg;
 
 % Bad ICs index lists
 hifreq_ics  = find(is_hifreq);
 nyquist_ics = find(is_nyquist);
-outside_ics = find(is_outside);
+slicebg_ics = find(is_slicebg);
 bad_ics     = find(is_bad);
 
 % Bad ICs list as a string
@@ -228,16 +222,16 @@ fclose(badfd);
 %% Nuisance IC stats
 
 % Write hifreq and nyquist info for each IC
-fprintf(logfd, '%6s %16s %16s %16s\n', 'IC', 'High Freq Frac','Nyquist Score','Nuisance');
+fprintf(logfd, '%6s %16s %16s %16s %16s\n', 'IC', 'High Freq Frac','Nyquist Score','Slice BG Score','Bad IC?');
 for ic = 1:nics
-  fprintf(logfd, '%6d %16.3f %16.3g %16.3g %16d\n', ic, hifreq_frac(ic), nyquist_score(ic), outside_frac(ic), is_bad(ic));
+  fprintf(logfd, '%6d %16.3f %16.3g %16.3g %16d\n', ic, hifreq_frac(ic), nyquist_score(ic), max_slicebg_score(ic), is_bad(ic));
 end
 
 % Count ICs in each group
 n_ics         = length(is_bad);
 n_hifreq_ics  = length(hifreq_ics);
 n_nyquist_ics = length(nyquist_ics);
-n_outside_ics = length(outside_ics);
+n_slicebg_ics = length(slicebg_ics);
 n_bad_ics     = length(bad_ics);
 
 % Total variance explained by bad ICs
@@ -248,9 +242,9 @@ total_bad_variance = sum(all_stats.exp_var(is_bad));
 fprintf(logfd, '\n');
 fprintf(logfd, 'Number of ICs            : %d\n', n_ics);
 fprintf(logfd, 'Number of hifreq ICs     : %d\n', n_hifreq_ics);
-fprintf(logfd, 'Number of nyquist ICs    : %d\n', n_nyquist_ics);
-fprintf(logfd, 'Number of outside ICs    : %d\n', n_outside_ics);
-fprintf(logfd, 'Number of bad ICs        : %d\n', n_bad_ics);
+fprintf(logfd, 'Number of Nyquist ICs    : %d\n', n_nyquist_ics);
+fprintf(logfd, 'Number of slice BG ICs   : %d\n', n_slicebg_ics);
+fprintf(logfd, 'Total number of bad ICs  : %d\n', n_bad_ics);
 fprintf(logfd, 'Bad IC exp var           : %0.1f%%\n', total_bad_variance);
 fprintf(logfd, '\n');
 fprintf(logfd, 'Hifreq ICs:\n');
@@ -259,8 +253,8 @@ fprintf(logfd, '\n\n');
 fprintf(logfd, 'Nyqyust ICs:\n');
 fprintf(logfd, ' %d', nyquist_ics);
 fprintf(logfd, '\n\n');
-fprintf(logfd, 'Outside ICs:\n');
-fprintf(logfd, ' %d', outside_ics);
+fprintf(logfd, 'Slice Background ICs:\n');
+fprintf(logfd, ' %d', slicebg_ics);
 fprintf(logfd, '\n\n');
 fprintf(logfd, 'Neural ICs:\n');
 fprintf(logfd, ' %d', find(~is_bad));
@@ -270,6 +264,11 @@ fprintf(logfd, '\n');
 fclose(logfd);
 
 %% Regress out nuisance ICs
+
+fprintf('\n');
+fprintf('Removing the following ICs from the 4D data:\n');
+fprintf('%s\n', bad_ics_list);
+fprintf('\n');
 
 % Melodic mixing matrix
 mix_mat = fullfile(ica_dir, 'melodic_mix');
@@ -282,10 +281,22 @@ cmd = sprintf('%s -i %s -d %s -o %s -f "%s" -a', ...
   regfilt_cmd, epi_file, mix_mat, clean_epi_file, bad_ics_list);
 
 % Run regression filter in a shell
-fprintf('Running : %s\n', cmd);
-try
-  system(cmd);
-catch REGFILT
-  fprintf('*** Problem running regfilt command - exiting\n');
-  return
+if do_glm
+  
+  fprintf('Running : %s\n', cmd);
+  
+  try
+    system(cmd);
+  catch REGFILT
+    fprintf('*** Problem running regfilt command - exiting\n');
+    return
+  end
+
+else
+  
+  fprintf('Skipping GLM\n');
+  
 end
+
+fprintf('Done\n');
+  

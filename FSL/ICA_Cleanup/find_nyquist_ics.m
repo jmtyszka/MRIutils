@@ -17,6 +17,9 @@ function [is_nyquist, nyquist_score] = find_nyquist_ics(IC_smodes, nyquist_mask,
 % Copyright 2013 California Institute of Technology.
 % All rights reserved.
 
+% Figure flag
+do_figure = true;
+
 % Default Nyquist correlation threshold
 if nargin < 3; corr_thresh = 0.4; end
 if nargin < 4; score_thresh = 1; end
@@ -33,33 +36,61 @@ end
 % Flatten XY in mask - separate r for each z slice
 nyquist_mask = reshape(nyquist_mask, nx * ny, nz);
 
-% Allocate maximum Nyquist correlation vector
-nyquist_score = zeros(nics,1);
+% Allocate matrix for slice-wise correlations of each IC spatial mode with Nyquist mask
+nyquist_corr = zeros(nz, nics);
 
 % Loop over all spatial ICs
 for ic = 1:nics
   
-  % Take absolute value of IC - Nyquist mask is positive only
-  this_ic = abs(IC_smodes(:,:,:,ic));
+  % Extract signed IC
+  this_ic = IC_smodes(:,:,:,ic);
   
-  % Flatten IC in XY to match mask
+  % Flatten IC in XY to match mask (nx * ny) x nz
   this_ic = reshape(this_ic, nx * ny, nz);
   
-  % r is a correlation matrix (nx * ny) x nz
+  % Correlation matrix for spatial mode vs Nyquist mask on a slice basis (nz x nz)
+  % Use the signed Nyquist mask with signed spatial IC mode
   r_mat = corr(this_ic, nyquist_mask);
   
-  % We're only interested in the leading diagonal
-  r = diag(r_mat);
-  
-  % Nyquist score = number of slices with spatial correlation with Nyquist
-  % mask > corr_thresh
-  nyquist_score(ic) = numel(find(r > corr_thresh)); 
+  % Save the leading diagonal of the correlation matrix as a column vector
+  nyquist_corr(:, ic) = diag(r_mat);
   
 end
 
-% Identify ICs with sufficient number of slices with spatial correlation >
-% corr_thresh
+% Take absolute correlation to allow for sign flips in IC
+nyquist_corr = abs(nyquist_corr);
+
+% Nyquist score = # of slices with spatial correlations > threshold
+nyquist_score = sum(nyquist_corr > corr_thresh);
+
+% Identify ICs with scores > threshold
 is_nyquist = nyquist_score >= score_thresh;
 
 % Convert to row vector
 is_nyquist = is_nyquist(:)';
+
+if do_figure
+  
+  % Zero correlations below threshold (for visualization)
+  nyquist_corr_thresh = nyquist_corr .* (nyquist_corr > corr_thresh);
+  
+  figure(20); clf; colormap(jet);
+  
+  subplot(311), imagesc(nyquist_corr, [0 1]); axis tight xy
+  xlabel('IC #');
+  ylabel('Slice #');
+  title('Nyquist Ghost Spatial Correlation');
+  colorbar
+  
+  subplot(312), imagesc(nyquist_corr_thresh); axis tight xy
+  xlabel('IC #');
+  ylabel('Slice #');
+  colorbar
+  
+  subplot(313), bar(nyquist_score);
+  xlabel('IC #');
+  ylabel('Score');
+  
+  drawnow
+  
+end
