@@ -68,7 +68,7 @@ end
 epi_file = fullfile(epi_dir, [epi_stub epi_ext]);
 
 % Create log file in same directory as EPI file
-log_file = fullfile(epi_dir,'ica_cleanup.log');
+log_file = fullfile(epi_dir, [epi_stub '_clean.log']);
 logfd = fopen(log_file,'w');
 if logfd < 0
   fprintf('*** Problem opening %s to write\n', log_file);
