@@ -8,7 +8,7 @@ function [mxy, mz, mxyc] = blochrfsim(t, B1, f, alpha)
 %
 % ARGS:
 % t  = time vector in seconds (1 x nt)
-% B1 = RF field vector in G   (1 x nt)
+% B1 = RF field waveform vector (arbitrary scaling) (1 x nt)
 % f  = isochromat frequency vector in Hz (1 x nf) [-5k..5k]
 % alpha = desired calibrated flip angle (degrees) [90]
 %
@@ -103,8 +103,8 @@ for wc = 1:nw
       cosphij2 = cos(phij/2.0);
 
       % Cayley-Klein parameters for this timestep
-      aj = cosphij2 - i * nj(3) * sinphij2;
-      bj = (nj(2) - i * nj(1)) * sinphij2;
+      aj = cosphij2 - 1i * nj(3) * sinphij2;
+      bj = (nj(2) - 1i * nj(1)) * sinphij2;
 
     end
 
@@ -116,7 +116,7 @@ for wc = 1:nw
 
   end
 
-  % Extract magnetization vector
+  % Extract quaternion complex magnetization vector
   alpha = ab(1);
   beta = ab(2);
 
@@ -127,7 +127,7 @@ for wc = 1:nw
   mz(wc) = alpha * conj(alpha) - beta * conj(beta);
 
   % Crushed spin-echo signal : M+_xyc = i beta^2
-  mxyc(wc) = i * beta * beta;
+  mxyc(wc) = 1i * beta * beta;
 
 end
 
@@ -135,28 +135,40 @@ end
 
 figure(1); clf
 
-subplot(141), plot(t * 1e3,B1 * 1e6);
+subplot(131), plot(t * 1e3,B1 * 1e6);
 title('B_1(t)');
 xlabel('Time (ms)');
 ylabel('B_1 (uT)');
 axis tight;
+grid on
 
-subplot(142), plot(f,real(mxy),f,imag(mxy));
+subplot(232), plot(f,real(mxy),f,imag(mxy));
 title('M_{xy} Response');
 xlabel('Frequency (Hz)');
 ylabel('Normalized M_{xy}');
 legend('M_x','M_y');
 set(gca,'YLim',[-1.1 1.1]);
+grid on
 
-subplot(144), plot(f,real(mxyc),f,imag(mxyc));
-title('Crushed M_{xy} Response');
-xlabel('Frequency (Hz)');
-ylabel('Normalized M_{xy}');
-legend('M_x','M_y');
-set(gca,'YLim',[-1.1 1.1]);
-
-subplot(143), plot(f,abs(mxy));
+subplot(233), plot(f,abs(mxy));
 title('|M_{xy}| Response');
 xlabel('Frequency (Hz)');
 ylabel('Normalized M_{xy}');
 set(gca,'YLim',[-1.1 1.1]);
+grid on
+
+subplot(235), plot(f,real(mxyc),f,imag(mxyc));
+title('Crushed Spin Echo M_{xy} Response');
+xlabel('Frequency (Hz)');
+ylabel('Normalized M_{xy}');
+legend('M_x','M_y');
+set(gca,'YLim',[-1.1 1.1]);
+grid on
+
+subplot(236), plot(f,mz);
+title('Longitudinal M_{z} Response');
+xlabel('Frequency (Hz)');
+ylabel('Normalized M_{z}');
+set(gca,'YLim',[-1.1 1.1]);
+grid on
+
