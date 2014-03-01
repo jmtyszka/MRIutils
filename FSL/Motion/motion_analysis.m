@@ -20,8 +20,8 @@ if nargin < 1
   moco_par_file = fullfile(dname, fname);
 end
 
-if nargin < 2; do_plot = true; end
-if nargin < 3; do_report = true; end
+if nargin < 2; do_plot = false; end
+if nargin < 3; do_report = false; end
 
 % Load and parse file
 C = textread(moco_par_file);
