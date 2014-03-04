@@ -1,12 +1,10 @@
-function g = gamma_1H
-% g = gamma_1H
-%
+function g = GAMMA_1H
 % Returns the 1H gyromagnetic ratio in rad/s/T
 %
 % AUTHOR : Mike Tyszka, Ph.D.
 % PLACE  : Caltech BIC
 % DATES  : 02/27/2002 From scratch
-% SOURCE: http://bic.beckman.uiuc.edu/mritab1/H.ascii.html
+% SOURCE : http://physics.nist.gov/cgi-bin/cuu/Value?gammap
 
 % 1H gyromagetic ratio in rad/s/T
-g = 2.67522212e8;
+g = 2.675222005e8;
