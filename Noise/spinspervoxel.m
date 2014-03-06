@@ -30,12 +30,12 @@ k = 1.3806488e-23;
 T = 37.0 + 273.1;
 
 % Molecular mass of water (g/mol)
-M = 18;
+M = 18.01528;
 
-% Mass density of water at 37C (kg/m^3)
-Dm = 1000;
+% Density of pure water at 37C (kg/m^3)
+Dm = 993;
 
-% H20 1H spins per cubic meter at 37C (molecules per m^3)
+% H20 1H spins per cubic meter at 37C (1H nuclei per m^3)
 Ds =  Dm * 1e3 / M * Na * 2;
 
 % Lamor frequency (Hz)
