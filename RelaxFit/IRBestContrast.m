@@ -5,9 +5,11 @@ function [TIopt, TRopt] = IRBestContrast(bright_T1rng, dark_T1rng)
 % final IR-SE or IR-GE image. Sequence is assumed to
 % Inv-TI-90-[180]-Echo-TD, where TR = TI + TD
 %
+% USAGE : [TIopt, TRopt] = IRBestContrast(bright_T1rng, dark_T1rng)
+%
 % AUTHOR : Mike Tyszka, Ph.D.
 % PLACE  : Caltech
-% DATES  :2014-01-16 JMT From scratch
+% DATES  : 2014-01-16 JMT From scratch
 %
 % Copyright 2014 California Institute of Technology.
 % All rights reserved.
@@ -33,9 +35,12 @@ bright_mean = mean_signal(TI, TD, bright_T1);
 dark_mean   = mean_signal(TI, TD, dark_T1);
 
 % Bright/Dark tissue signal ratio
-s_ratio = log10(bright_mean ./ (dark_mean + eps));
+% s_ratio = log10(bright_mean ./ (dark_mean + eps));
+s_ratio = bright_mean ./ (dark_mean + eps);
 
-% Plot results
+%% Plot results
+
+figure(1); clf; colormap(hot)
 
 subplot(221), imagesc(TI, TD, bright_mean, [0 1]); axis xy equal; colorbar;
 xlabel('TD (ms)');
@@ -63,6 +68,7 @@ Mz = IRShortTR_Contrast(T1, TI, TD);
 subplot(224), plot(T1, abs(Mz));
 xlabel('T1 (ms)');
 ylabel('|Mz(T1)|');
+set(gca,'XScale','log','YScale','log');
 title(sprintf('|Mz| for (TI, TR) = (%0.1f, %0.1f)', TI, TI+TD));
 
 function ms = mean_signal(TI, TD, T1)

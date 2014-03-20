@@ -1,15 +1,32 @@
 function [mask, s_mask] = mrimask(s)
-% [mask, s_mask] = mrimask(s)
+% Noise-based intensity mask for MR images
+%
+% USAGE : [mask, s_mask] = mrimask(s)
 %
 % Determine intensity mask threshold by searching for the first local
 % minimum above the noise peak in the intensity histogram
 %
 % AUTHOR : Mike Tyszka, Ph.D.
 % DATES  : 09/19/2007 JMT From scratch
+%          03/20/2014 JMT Update comments
 % PLACE  : Caltech
 %
-% Copyright 2007 California Institute of Technology.
-% All rights reserved.
+% This file is part of MRIutils.
+%
+%     MRIutils is free software: you can redistribute it and/or modify
+%     it under the terms of the GNU General Public License as published by
+%     the Free Software Foundation, either version 3 of the License, or
+%     (at your option) any later version.
+%
+%     MRIutils is distributed in the hope that it will be useful,
+%     but WITHOUT ANY WARRANTY; without even the implied warranty of
+%     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%     GNU General Public License for more details.
+%
+%     You should have received a copy of the GNU General Public License
+%     along with MRIutils.  If not, see <http://www.gnu.org/licenses/>.
+%
+% Copyright 2007,2013 California Institute of Technology.
 
 % Debug flag for verbose output
 debug = 0;

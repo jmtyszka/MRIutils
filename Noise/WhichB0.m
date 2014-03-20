@@ -1,4 +1,6 @@
 function B0 = WhichB0
+% Estimate optimal B0 for a given experiment
+%
 % B0 = WhichB0
 %
 % Given the following:
@@ -6,12 +8,28 @@ function B0 = WhichB0
 %   - Anatomic region
 %   - Required spatial resolution
 %   - Minimum SNR
-% this function estimates an optimal B0 at which
-% to perform the experiment.
 %
 % AUTHOR : Mike Tyszka, Ph.D.
 % PLACE  : Caltech BIC
-% DATES  : 4/7/00 Start from scratch
+% DATES  : 04/07/2000 JMT From scratch
+%          03/20/2014 JMT Update comments
+%
+% This file is part of MRIutils.
+%
+%     MRIutils is free software: you can redistribute it and/or modify
+%     it under the terms of the GNU General Public License as published by
+%     the Free Software Foundation, either version 3 of the License, or
+%     (at your option) any later version.
+%
+%     MRIutils is distributed in the hope that it will be useful,
+%     but WITHOUT ANY WARRANTY; without even the implied warranty of
+%     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%     GNU General Public License for more details.
+%
+%     You should have received a copy of the GNU General Public License
+%     along with MRIutils.  If not, see <http://www.gnu.org/licenses/>.
+%
+% Copyright 2000,2014 California Institute of Technology.
 
 % The underlying MRI SNR equation
 % The proportionality constant is set to 1

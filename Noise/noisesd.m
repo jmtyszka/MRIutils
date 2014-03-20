@@ -1,15 +1,19 @@
 function sd_n = noisesd(x)
 % Estimate the noise sd using wavelet decomposition and MAD of the detail coeffs
 %
-% sd_n = noisesd(x)
+% USAGE: sd_n = noisesd(x)
+%
+% ARGS:
+% x = N-D scalar magnitude MR image
+%
+% RETURNS:
+% sd_n = robust noise SD estimate
 % 
 % AUTHOR : Mike Tyszka, Ph.D.
 % PLACE  : Caltech BIC
 % DATES  : 01/26/2001 JMT Extract from normnoise.m
 %          01/17/2006 JMT M-Lint corrections
-%
-% Copyright 2001-2006 California Institute of Technology.
-% All rights reserved.
+%          03/20/2014 JMT Update comments
 %
 % This file is part of MRutils.
 %
@@ -27,8 +31,10 @@ function sd_n = noisesd(x)
 % along with MRutils; if not, write to the Free Software
 % Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 %
+% Copyright 2001,2006,2014 California Institute of Technology.
+
 % Single-level wavelet decomposition of x
-[ca,cd] = dwt(x(:),'sym4');
+[~,cd] = dwt(x(:),'sym4');
 
 % Estimate the noise sd using the MAD of the detail coefficients (cd)
 sd_n = median(abs(cd(:) - median(cd(:)))) / 0.6745; 

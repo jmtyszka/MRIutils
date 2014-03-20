@@ -5,8 +5,22 @@ function boldeff
 % PLACE : Caltech Brain Imaging Center
 % DATES : 07/17/2009 JMT From scratch for NSF MRI
 %
-% Copyright 2009 California Institute of Technology.
-% All rights reserved.
+% This file is part of MRIutils.
+%
+%     MRIutils is free software: you can redistribute it and/or modify
+%     it under the terms of the GNU General Public License as published by
+%     the Free Software Foundation, either version 3 of the License, or
+%     (at your option) any later version.
+%
+%     MRIutils is distributed in the hope that it will be useful,
+%     but WITHOUT ANY WARRANTY; without even the implied warranty of
+%     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%     GNU General Public License for more details.
+%
+%     You should have received a copy of the GNU General Public License
+%     along with MRIutils.  If not, see <http://www.gnu.org/licenses/>.
+%
+% Copyright 2009,2013 California Institute of Technology.
 
 % Gray matter T1 in ms
 T1 = 1450;
