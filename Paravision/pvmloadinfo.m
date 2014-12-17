@@ -1,9 +1,6 @@
 function [info, status, errmsg] = pvmloadinfo(serdir)
 % [info, status, errmsg] = pvmloadinfo(serdir)
 %
-
-%
-gamma_1H = 42.57;
 % Load information from a PvM data directory.
 % Assumes that serdir contains a method file and
 % that the parent directory contains a subject text file.
@@ -23,6 +20,9 @@ gamma_1H = 42.57;
 % Default arg
 if nargin < 1; serdir = '.'; end
 if strcmp(serdir,'.'); serdir = pwd; end
+
+% Local definition of gamma 1H in MHz/T
+gamma_1H = 42.57;
 
 % Default status 1 => everything ok
 status = 1;
@@ -76,7 +76,8 @@ if isempty(methodinfo)
 end
 
 % Assume the series number is also the containing directory number
-info.serno = str2double(lastdir(serdir));
+[~,tmpdir,~] = fileparts(serdir);
+info.serno = str2double(tmpdir);
 info.scanno = info.serno; % Duplicate for backwards consistency
 
 % Pulse sequence parameters

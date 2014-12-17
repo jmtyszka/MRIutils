@@ -58,40 +58,44 @@ for sc = 1:nscans
   % Reconstruct image
   fprintf('Loading Pv images\n');
   [s, info] = parxload2dseq(scandir);
+  
   if isequal(info.name,'Unknown')
-    fprintf('Problem loading Pv scan\n');
-    return
+  
+      fprintf('Problem loading Pv scan\n');
+  
+  else
+  
+      % Grab 4D data dimensions (handles time-series or multi-echo datasets)
+      [nx,ny,nz,nt] = size(s);
+      
+      fprintf('(nx,ny,nz,nt) = (%d,%d,%d,%d) from data\n',nx,ny,nz,nt);
+      fprintf('(nx,ny,nz,nt) = (%d,%d,%d,%d) from header\n',info.recodim(1),info.recodim(2),info.recodim(3),info.nims);
+      
+      %% Data output
+      
+      % Setup Nifti rotation matrices with voxel size on diagonal
+      vsize = ones(1,4);
+      vsize(1:3) = info.vsize(1:3)/1000.0; % um -> mm for Nifti-1
+      nii_mat = diag(vsize);
+      nii_mat0 = nii_mat;
+      
+      % Flip sign of A11 element of matrices
+      % This forces radiological convention for non-oblique datasets
+      nii_mat(1,1) = -nii_mat(1,1);
+      nii_mat0(1,1) = -nii_mat0(1,1);
+      
+      % Construct Nifti volume name
+      t_string = datestr(info.time,30);
+      nii_name = sprintf('%s_%03d_%s.nii.gz',info.method,info.scanno,t_string);
+      nii_path = fullfile(outdir,nii_name);
+      
+      % Save compressed Nifti-1 image volume
+      fprintf('Saving %s\n', nii_name);
+      save_nii(nii_path,s,'FLOAT32-LE',nii_mat,nii_mat0);
+      
+      % Add output file name to list
+      nii_names{sc} = nii_path;
+      
   end
-  
-  % Grab 4D data dimensions (handles time-series or multi-echo datasets)
-  [nx,ny,nz,nt] = size(s);
-  
-  fprintf('(nx,ny,nz,nt) = (%d,%d,%d,%d) from data\n',nx,ny,nz,nt);
-  fprintf('(nx,ny,nz,nt) = (%d,%d,%d,%d) from header\n',info.recodim(1),info.recodim(2),info.recodim(3),info.nims);
-  
-  %% Data output
-  
-  % Setup Nifti rotation matrices with voxel size on diagonal
-  vsize = ones(1,4);
-  vsize(1:3) = info.vsize(1:3)/1000.0; % um -> mm for Nifti-1
-  nii_mat = diag(vsize);
-  nii_mat0 = nii_mat;
-  
-  % Flip sign of A11 element of matrices
-  % This forces radiological convention for non-oblique datasets
-  nii_mat(1,1) = -nii_mat(1,1);
-  nii_mat0(1,1) = -nii_mat0(1,1);
-  
-  % Construct Nifti volume name
-  t_string = datestr(info.time,30);
-  nii_name = sprintf('%s_%03d_%s.nii.gz',info.method,info.scanno,t_string);
-  nii_path = fullfile(outdir,nii_name);
-  
-  % Save compressed Nifti-1 image volume
-  fprintf('Saving %s\n', nii_name);
-  save_nii(nii_path,s,'FLOAT32-LE',nii_mat,nii_mat0);
-  
-  % Add output file name to list
-  nii_names{sc} = nii_path;
   
 end

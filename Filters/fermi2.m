@@ -14,12 +14,12 @@ function H = fermi2(dims, fr, fw, echopos)
 % DATES  : 02/04/2003 JMT Adapt from hamming3.m (JMT)
 
 % Default arguments
-if nargin < 2 fr = 0.45; end
-if nargin < 3 fw = 0.05; end
-if nargin < 4 echopos = 0.5; end
+if nargin < 2, fr = 0.45; end
+if nargin < 3, fw = 0.05; end
+if nargin < 4, echopos = 0.5; end
 
-if length(fr) == 1 fr = [fr fr]; end
-if length(fw) == 1 fw = [fw fw]; end
+if length(fr) == 1, fr = [fr fr]; end
+if length(fw) == 1, fw = [fw fw]; end
 
 % Adjust the filter radius for the echo position
 fr(1) = 2 * (0.5 + abs(echopos - 0.5)) * fr(1);

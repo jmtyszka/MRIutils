@@ -12,7 +12,7 @@ function d = lastdir(p)
 % All rights reserved.
 
 % Split pathname using '\' delimiter
-s = strread(p,'%s','delimiter','\\');
+s = strread(p,'%s','delimiter',filesep);
 
 % Last member of cell array is the final directory
 d = s{length(s)};
