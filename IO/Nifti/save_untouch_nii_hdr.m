@@ -1,33 +1,13 @@
 %  internal function
-  
+
 %  - Jimmy Shen (jimmy@rotman-baycrest.on.ca)
 
 function save_nii_hdr(hdr, fid)
-   
-   if ~exist('hdr','var') | ~exist('fid','var')
-      error('Usage: save_nii_hdr(hdr, fid)');
-   end
-   
+
    if ~isequal(hdr.hk.sizeof_hdr,348),
       error('hdr.hk.sizeof_hdr must be 348.');
    end
-   
-   if hdr.hist.qform_code == 0 & hdr.hist.sform_code == 0
-      hdr.hist.sform_code = 1;
-      hdr.hist.srow_x(1) = hdr.dime.pixdim(2);
-      hdr.hist.srow_x(2) = 0;
-      hdr.hist.srow_x(3) = 0;
-      hdr.hist.srow_y(1) = 0;
-      hdr.hist.srow_y(2) = hdr.dime.pixdim(3);
-      hdr.hist.srow_y(3) = 0;
-      hdr.hist.srow_z(1) = 0;
-      hdr.hist.srow_z(2) = 0;
-      hdr.hist.srow_z(3) = hdr.dime.pixdim(4);
-      hdr.hist.srow_x(4) = (1-hdr.hist.originator(1))*hdr.dime.pixdim(2);
-      hdr.hist.srow_y(4) = (1-hdr.hist.originator(2))*hdr.dime.pixdim(3);
-      hdr.hist.srow_z(4) = (1-hdr.hist.originator(3))*hdr.dime.pixdim(4);
-   end
-   
+
    write_header(hdr, fid);
 
    return;					% save_nii_hdr

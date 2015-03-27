@@ -6,7 +6,7 @@
 %
 %         rri_file_menu(fig,0) means no 'Close' menu.
 %
-%  - Jimmy Shen (pls@rotman-baycrest.on.ca)
+%  - Jimmy Shen (jimmy@rotman-baycrest.on.ca)
 %
 %--------------------------------------------------------------------
 
@@ -16,6 +16,11 @@ function rri_file_menu(action, varargin)
       fig = action;
       action = 'init';
    end
+
+   %  clear the message line,
+   %
+   h = findobj(gcf,'Tag','MessageLine');
+   set(h,'String','');
 
    if ~strcmp(action, 'init')
       set(gcbf, 'InvertHardcopy','off');
@@ -161,7 +166,12 @@ function export_fig
    old_pointer = get(gcbf,'pointer');
    set(gcbf,'pointer','watch');
 
-   saveas(gcbf,filename);
+   try
+      saveas(gcbf,filename);
+   catch
+      msg = 'ERROR: Cannot save file';
+      set(findobj(gcf,'Tag','MessageLine'),'String',msg);
+   end
 
    set(gcbf,'pointer',old_pointer);
 

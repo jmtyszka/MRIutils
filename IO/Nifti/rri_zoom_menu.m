@@ -3,7 +3,7 @@
 %  Usage: rri_zoom_menu(fig);
 %
 
-%  - Jimmy Shen (pls@rotman-baycrest.on.ca)
+%  - Jimmy Shen (jimmy@rotman-baycrest.on.ca)
 %
 %--------------------------------------------------------------------
 function menu_hdl = rri_zoom_menu(fig)

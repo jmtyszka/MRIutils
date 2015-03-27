@@ -1,26 +1,29 @@
-%  Load NIFTI or ANALYZE dataset. Support both *.nii and *.hdr/*.img
-%  file extension. If file extension is not provided, *.hdr/*.img will
-%  be used as default.
+%  Load NIFTI or ANALYZE dataset, but not applying any appropriate affine
+%  geometric transform or voxel intensity scaling.
 %
-%  A subset of NIFTI transform is included. For non-orthogonal rotation,
-%  shearing etc., please use 'reslice_nii.m' to reslice the NIFTI file.
-%  It will not cause negative effect, as long as you remember not to do
-%  slice time correction after reslicing the NIFTI file. Output variable
-%  nii will be in RAS orientation, i.e. X axis from Left to Right,
-%  Y axis from Posterior to Anterior, and Z axis from Inferior to
-%  Superior.
+%  Although according to NIFTI website, all those header information are
+%  supposed to be applied to the loaded NIFTI image, there are some
+%  situations that people do want to leave the original NIFTI header and
+%  data untouched. They will probably just use MATLAB to do certain image
+%  processing regardless of image orientation, and to save data back with
+%  the same NIfTI header.
+%
+%  Since this program is only served for those situations, please use it
+%  together with "save_untouch_nii.m", and do not use "save_nii.m" or
+%  "view_nii.m" for the data that is loaded by "load_untouch_nii.m". For
+%  normal situation, you should use "load_nii.m" instead.
 %  
-%  Usage: nii = load_nii(filename, [img_idx], [dim5_idx], [dim6_idx], ...
-%			[dim7_idx], [old_RGB], [tolerance], [preferredForm])
+%  Usage: nii = load_untouch_nii(filename, [img_idx], [dim5_idx], [dim6_idx], ...
+%			[dim7_idx], [old_RGB], [slice_idx])
 %  
 %  filename  - 	NIFTI or ANALYZE file name.
 %  
-%  img_idx (optional)  -  a numerical array of 4th dimension indices,
-%	which is the indices of image scan volume. The number of images
-%	scan volumes can be obtained from get_nii_frame.m, or simply
-%	hdr.dime.dim(5). Only the specified volumes will be loaded. 
-%	All available image volumes will be loaded, if it is default or
-%	empty.
+%  img_idx (optional)  -  a numerical array of image volume indices.
+%	Only the specified volumes will be loaded. All available image
+%	volumes will be loaded, if it is default or empty.
+%
+%	The number of images scans can be obtained from get_nii_frame.m,
+%	or simply: hdr.dime.dim(5).
 %
 %  dim5_idx (optional)  -  a numerical array of 5th dimension indices.
 %	Only the specified range will be loaded. All available range
@@ -42,20 +45,9 @@
 %	old_RGB variable to 1 and try again, because it could be in
 %	old RGB24. It will be set to 0, if it is default or empty.
 %
-%  tolerance (optional) - distortion allowed in the loaded image for any
-%	non-orthogonal rotation or shearing of NIfTI affine matrix. If 
-%	you set 'tolerance' to 0, it means that you do not allow any 
-%	distortion. If you set 'tolerance' to 1, it means that you do 
-%	not care any distortion. The image will fail to be loaded if it
-%	can not be tolerated. The tolerance will be set to 0.1 (10%), if
-%	it is default or empty.
-%
-%  preferredForm (optional)  -  selects which transformation from voxels
-%	to RAS coordinates; values are s,q,S,Q.  Lower case s,q indicate
-%	"prefer sform or qform, but use others if preferred not present". 
-%	Upper case indicate the program is forced to use the specificied
-%	tranform or fail loading.  'preferredForm' will be 's', if it is
-%	default or empty.	- Jeff Gunter
+%  slice_idx (optional)  -  a numerical array of image slice indices.
+%	Only the specified slices will be loaded. All available image
+%	slices will be loaded, if it is default or empty.
 %
 %  Returned values:
 %  
@@ -73,20 +65,13 @@
 %
 %	img - 		3D (or 4D) matrix of NIFTI data.
 %
-%	original -	the original header before any affine transform.
-%  
-%  Part of this file is copied and modified from:
-%  http://www.mathworks.com/matlabcentral/fileexchange/1878-mri-analyze-tools
-%  
-%  NIFTI data format can be found on: http://nifti.nimh.nih.gov
-%  
 %  - Jimmy Shen (jimmy@rotman-baycrest.on.ca)
 %
-function nii = load_nii(filename, img_idx, dim5_idx, dim6_idx, dim7_idx, ...
-			old_RGB, tolerance, preferredForm)
+function nii = load_untouch_nii(filename, img_idx, dim5_idx, dim6_idx, dim7_idx, ...
+			old_RGB, slice_idx)
 
    if ~exist('filename','var')
-      error('Usage: nii = load_nii(filename, [img_idx], [dim5_idx], [dim6_idx], [dim7_idx], [old_RGB], [tolerance], [preferredForm])');
+      error('Usage: nii = load_untouch_nii(filename, [img_idx], [dim5_idx], [dim6_idx], [dim7_idx], [old_RGB], [slice_idx])');
    end
 
    if ~exist('img_idx','var') | isempty(img_idx)
@@ -109,13 +94,10 @@ function nii = load_nii(filename, img_idx, dim5_idx, dim6_idx, dim7_idx, ...
       old_RGB = 0;
    end
 
-   if ~exist('tolerance','var') | isempty(tolerance)
-      tolerance = 0.1;			% 10 percent
+   if ~exist('slice_idx','var') | isempty(slice_idx)
+      slice_idx = [];
    end
 
-   if ~exist('preferredForm','var') | isempty(preferredForm)
-      preferredForm= 's';		% Jeff
-   end
 
    v = version;
 
@@ -171,18 +153,28 @@ function nii = load_nii(filename, img_idx, dim5_idx, dim6_idx, dim7_idx, ...
    %
    [nii.hdr,nii.filetype,nii.fileprefix,nii.machine] = load_nii_hdr(filename);
 
-   %  Read the header extension
-   %
-%   nii.ext = load_nii_ext(filename);
+   if nii.filetype == 0
+      nii.hdr = load_untouch0_nii_hdr(nii.fileprefix,nii.machine);
+      nii.ext = [];
+   else
+      nii.hdr = load_untouch_nii_hdr(nii.fileprefix,nii.machine,nii.filetype);
+
+      %  Read the header extension
+      %
+      nii.ext = load_nii_ext(filename);
+   end
 
    %  Read the dataset body
    %
-   [nii.img,nii.hdr] = load_nii_img(nii.hdr,nii.filetype,nii.fileprefix, ...
-		nii.machine,img_idx,dim5_idx,dim6_idx,dim7_idx,old_RGB);
+   [nii.img,nii.hdr] = load_untouch_nii_img(nii.hdr,nii.filetype,nii.fileprefix, ...
+		nii.machine,img_idx,dim5_idx,dim6_idx,dim7_idx,old_RGB,slice_idx);
 
    %  Perform some of sform/qform transform
    %
-   nii = xform_nii(nii, tolerance, preferredForm);
+%   nii = xform_nii(nii, tolerance, preferredForm);
+
+   nii.untouch = 1;
+
 
    %  Clean up after gunzip
    %
@@ -194,5 +186,6 @@ function nii = load_nii(filename, img_idx, dim5_idx, dim6_idx, dim7_idx, ...
       rmdir(tmpDir,'s');
    end
 
-   return					% load_nii
+
+   return					% load_untouch_nii
 

@@ -1,4 +1,4 @@
-function [k_corr, x_optim, optres] = rare_phaseoptim2(k,ky_order,corr_type)
+function [k_corr, x_optim, optres] = rare_phaseoptim2(k, ky_order, corr_type)
 % [k_corr, dphi_echo_optim, optres] = rare_phaseoptim2(k,ky_order,corr_type)
 %
 % Estimate per-echo phase correction for DW-RARE data by ghost minimization

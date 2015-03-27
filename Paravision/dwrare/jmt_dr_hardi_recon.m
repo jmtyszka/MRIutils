@@ -1,12 +1,12 @@
-function jmt_dr_hardi_recon(study_dir,hardi_scans,samp_type,method)
+function jmt_dr_hardi_recon(study_dir, hardi_scans, samp_type, method)
 % Reconstruct a complete HARDI dataset acquired using the jmt_dr DW-RARE
 % sequence. Apply an optimizaed phase correction to all scans.
 %
-% SYNTAX : jmt_dr_hardi_recon(study_dir,hardi_scans,samp_type,method)
+% USAGE : jmt_dr_hardi_recon(study_dir, hardi_scans, samp_type, method)
 %
 % ARGS:
-% study_dir = Paravision study directory
-% hardi_scans = scan numbers of HARDI scans
+% study_dir = Paravision study directory (string)
+% hardi_scans = scan numbers of HARDI scans (vector of doubles)
 % samp_type = 'rodent_head' or 'other' ['other']
 % method = phase correction method:
 %   'none'
@@ -19,23 +19,10 @@ function jmt_dr_hardi_recon(study_dir,hardi_scans,samp_type,method)
 % AUTHOR : Mike Tyszka, Ph.D.
 % DATES  : 09/13/2007 JMT From scratch
 %          02/26/2008 JMT Rename for HARDI recon
+%          2015-03-27 JMT Update for latest jmt_dr results
 %
-% Copyright 2007-2008 California Institute of Technology.
+% Copyright 2007-2015 California Institute of Technology.
 % All rights reserved.
-
-% Internal flags
-debug = 0; % Lots of internal logging, figure generation, etc
-
-% Echo correction type: 'phase' or 'complex'
-corr_type = 'phase';
-
-% Empirical bvec flip
-flip = [1 1 -1]';
-
-% Spatial filtering
-filt_type = 'gauss';
-fr = 0.5;
-fw = 0.0;
 
 % Default args
 if nargin < 1; study_dir = pwd; end
@@ -53,6 +40,21 @@ end
 if nargin < 3; samp_type = 'other'; end
 if nargin < 4; method = 'optimized'; end
 
+% Internal flags
+debug = 0; % Lots of internal logging, figure generation, etc
+
+% Echo correction type: 'phase' or 'complex'
+corr_type = 'phase';
+
+% Empirical bvec flip
+flip = [1 1 -1]';
+
+% Spatial filtering
+filt_type = 'gauss';
+fr = 0.5;
+fw = 0.0;
+
+% Count number of HARDI scans
 nhardi = length(hardi_scans);
 
 %% Find DWIs in HARDI list
@@ -231,7 +233,7 @@ for dc = 1:nhardi
   if info.bfactor > 0.0
     switch lower(method)
       case 'optimized'
-        [k_corr, x_optim, optres] = rare_phaseoptim(k_s0,k,ky_order,corr_type);
+        [k_corr, x_optim, optres] = rare_phaseoptim2(k, ky_order, corr_type);
       otherwise
         k_corr = jmt_ddr_phasecorr(k, method, info, phi_0, debug);
     end
@@ -325,7 +327,6 @@ for dc = 1:nhardi
     axis image xy off;
     title(['Correction : ' method]);
 
-
     % Print figure to PNG image in the figures subdirectory
     fig_dir = fullfile(study_dir,'figures');
     if ~exist(fig_dir,'dir')
@@ -394,34 +395,37 @@ if ~exist(fsl_dir,'dir');
 end
 
 % Write bvals and bvecs text files to FSL directory
+fprintf('Writing b values and vectors to FSL directory\n');
 fslb(fsl_dir,bvals,bvecs);
 
-% Setup Nifti rotation matrices with voxel size on diagonal
 % Use FOV and sampled matrix size to calculate reconstructed vsize
-vsize = ones(1,4);
-vsize(1:3) = info.fov(1:3) ./ info.sampdim(1:3); % in mm for Nifti-1
-nii_mat = diag(vsize);
-nii_mat0 = nii_mat;
+vsize = info.fov(1:3) ./ info.sampdim(1:3); % in mm for Nifti-1
 
 % Flip sign of A11 element of matrices
 % This forces radiological convention for non-oblique datasets
-nii_mat(1,1) = -nii_mat(1,1);
-nii_mat0(1,1) = -nii_mat0(1,1);
+% nii_mat(1,1) = -nii_mat(1,1);
+% nii_mat0(1,1) = -nii_mat0(1,1);
 
 % Save DWI image volume
-save_nii(fullfile(fsl_dir,'hardi.nii.gz'),s_4d,'FLOAT32-LE',nii_mat,nii_mat0);
+fprintf('Saving enormous 4D HARDI image\n');
+hardi_name = fullfile(fsl_dir,'hardi.nii.gz');
+nii = make_nii(s_4d, vsize);
+save_nii(nii, hardi_name);
+fprintf('Finished\n');
 
 % Change to FSL directory
 cwd = pwd;
 cd(fsl_dir);
 
 % FSL FDT eddy current distortion correction
-fprintf('FSL eddy current correction\n');
+fprintf('Starting FSL eddy current correction\n');
 !eddy_correct hardi data 0
 
 % Reload eddy corrected data
 fprintf('Reload DWIs\n');
-s_4d = load_nii(fullfile(fsl_dir,'data.nii.gz'));
+data_name = fullfile(fsl_dir,'data.nii.gz');
+nii = load_nii(data_name);
+s_4d = nii.img;
 
 %% Auxilliary volumes
 % Ouput idwi, nodif and nodif_brain_mask
@@ -435,18 +439,26 @@ nodif = mean(s_4d(:,:,:,s0_inds),4);
 fprintf('Generating brain mask for %s\n', samp_type);
 switch samp_type
   case 'rodent_head'
-    [nodif_brain,nodif_brain_mask] = skullstrip(idwi);
+    [~, nodif_brain_mask] = skullstrip(idwi);
   otherwise
     nodif_brain_mask = mrimask(idwi);
 end
 
 % Save auxilliary volumes
 fprintf('Writing iDWI\n');
-save_nii(fullfile(fsl_dir,'idwi.nii.gz'),idwi,'FLOAT32-LE',nii_mat,nii_mat0);
+idwi_name = fullfile(fsl_dir,'idwi.nii.gz');
+nii = make_nii(idwi, vsize);
+save_nii(nii, idwi_name);
+
 fprintf('Writing nodif\n');
-save_nii(fullfile(fsl_dir,'nodif.nii.gz'),nodif,'FLOAT32-LE',nii_mat,nii_mat0);
+nodif_name = fullfile(fsl_dir,'nodif.nii.gz');
+nii = make_nii(nodif, vsize);
+save_nii(nii, nodif_name);
+
 fprintf('Writing nodif_brain_mask\n');
-save_nii(fullfile(fsl_dir,'nodif_brain_mask.nii.gz'),nodif_brain_mask,'FLOAT32-LE',nii_mat,nii_mat0);
+nodif_brain_mask_name = fullfile(fsl_dir,'nodif_brain_mask.nii.gz');
+nii = make_nii(nodif_brain_mask, vsize);
+save_nii(nii, nodif_brain_mask_name);
 
 % FSL FDT tensor fitting
 fprintf('FSL dtifit\n');

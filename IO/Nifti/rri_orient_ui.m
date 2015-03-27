@@ -8,6 +8,8 @@
 %	Standard RAS Orientation:	[1 2 3]
 %	Standard RHOS Orientation:	[2 4 3]
 
+%  Jimmy Shen (jimmy@rotman-baycrest.on.ca), 26-APR-04
+%
 function orient = rri_orient_ui(varargin)
 
    if nargin == 0

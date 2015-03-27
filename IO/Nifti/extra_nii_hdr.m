@@ -6,7 +6,7 @@
 %
 %  NIFTI data format can be found on: http://nifti.nimh.nih.gov
 %
-%  - Jimmy Shen (pls@rotman-baycrest.on.ca)
+%  - Jimmy Shen (jimmy@rotman-baycrest.on.ca)
 %
 function hdr = extra_nii_hdr(hdr)
 

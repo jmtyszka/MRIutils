@@ -13,7 +13,7 @@
 %  Inspired from the LORETA PASCAL program:
 %	http://www.unizh.ch/keyinst/NewLORETA
 %
-%  Jimmy, pls@rotman-baycrest.on.ca
+%  jimmy@rotman-baycrest.on.ca
 %
 %----------------------------------------------------------------
 function cmap = bipolar(M, lo, hi, contrast)

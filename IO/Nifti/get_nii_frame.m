@@ -15,29 +15,79 @@
 %
 %  NIFTI data format can be found on: http://nifti.nimh.nih.gov
 %
-%  - Jimmy Shen (pls@rotman-baycrest.on.ca)
+%  - Jimmy Shen (jimmy@rotman-baycrest.on.ca)
 %
-function [ total_scan ] = get_nii_frame(fileprefix)
+function [ total_scan ] = get_nii_frame(filename)
 
-   if ~exist('fileprefix','var'),
-      error('Usage: [ hdr, fileprefix, machine ] = get_nii_frame(filename)');
+   if ~exist('filename','var'),
+      error('Usage: [ total_scan ] = get_nii_frame(filename)');
    end
 
-   if ~exist('machine','var'), machine = 'ieee-le'; end
+   v = version;
 
+   %  Check file extension. If .gz, unpack it into temp folder
+   %
+   if length(filename) > 2 & strcmp(filename(end-2:end), '.gz')
+
+      if ~strcmp(filename(end-6:end), '.img.gz') & ...
+	 ~strcmp(filename(end-6:end), '.hdr.gz') & ...
+	 ~strcmp(filename(end-6:end), '.nii.gz')
+
+         error('Please check filename.');
+      end
+
+      if str2num(v(1:3)) < 7.1 | ~usejava('jvm')
+         error('Please use MATLAB 7.1 (with java) and above, or run gunzip outside MATLAB.');
+      elseif strcmp(filename(end-6:end), '.img.gz')
+         filename1 = filename;
+         filename2 = filename;
+         filename2(end-6:end) = '';
+         filename2 = [filename2, '.hdr.gz'];
+
+         tmpDir = tempname;
+         mkdir(tmpDir);
+         gzFileName = filename;
+
+         filename1 = gunzip(filename1, tmpDir);
+         filename2 = gunzip(filename2, tmpDir);
+         filename = char(filename1);	% convert from cell to string
+      elseif strcmp(filename(end-6:end), '.hdr.gz')
+         filename1 = filename;
+         filename2 = filename;
+         filename2(end-6:end) = '';
+         filename2 = [filename2, '.img.gz'];
+
+         tmpDir = tempname;
+         mkdir(tmpDir);
+         gzFileName = filename;
+
+         filename1 = gunzip(filename1, tmpDir);
+         filename2 = gunzip(filename2, tmpDir);
+         filename = char(filename1);	% convert from cell to string
+      elseif strcmp(filename(end-6:end), '.nii.gz')
+         tmpDir = tempname;
+         mkdir(tmpDir);
+         gzFileName = filename;
+         filename = gunzip(filename, tmpDir);
+         filename = char(filename);	% convert from cell to string
+      end
+   end
+
+   fileprefix = filename;
+   machine = 'ieee-le';
    new_ext = 0;
 
-   if findstr('.nii',fileprefix)
+   if findstr('.nii',fileprefix) & strcmp(fileprefix(end-3:end), '.nii')
       new_ext = 1;
-      fileprefix = strrep(fileprefix,'.nii','');
+      fileprefix(end-3:end)='';
    end
 
-   if findstr('.hdr',fileprefix)
-      fileprefix = strrep(fileprefix,'.hdr','');
+   if findstr('.hdr',fileprefix) & strcmp(fileprefix(end-3:end), '.hdr')
+      fileprefix(end-3:end)='';
    end
 
-   if findstr('.img',fileprefix)
-      fileprefix = strrep(fileprefix,'.img','');
+   if findstr('.img',fileprefix) & strcmp(fileprefix(end-3:end), '.img')
+      fileprefix(end-3:end)='';
    end
 
    if new_ext
@@ -91,6 +141,12 @@ function [ total_scan ] = get_nii_frame(fileprefix)
    end
 
    total_scan = hdr.dim(5);
+
+   %  Clean up after gunzip
+   %
+   if exist('gzFileName', 'var')
+      rmdir(tmpDir,'s');
+   end
 
    return;					% get_nii_frame
 

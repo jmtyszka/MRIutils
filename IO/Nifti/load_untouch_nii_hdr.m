@@ -2,29 +2,9 @@
 
 %  - Jimmy Shen (jimmy@rotman-baycrest.on.ca)
 
-function [hdr, filetype, fileprefix, machine] = load_nii_hdr(fileprefix)
+function hdr = load_nii_hdr(fileprefix, machine, filetype)
 
-   if ~exist('fileprefix','var'),
-      error('Usage: [hdr, filetype, fileprefix, machine] = load_nii_hdr(filename)');
-   end
-
-   machine = 'ieee-le';
-   new_ext = 0;
-
-   if findstr('.nii',fileprefix) & strcmp(fileprefix(end-3:end), '.nii')
-      new_ext = 1;
-      fileprefix(end-3:end)='';
-   end
-
-   if findstr('.hdr',fileprefix) & strcmp(fileprefix(end-3:end), '.hdr')
-      fileprefix(end-3:end)='';
-   end
-
-   if findstr('.img',fileprefix) & strcmp(fileprefix(end-3:end), '.img')
-      fileprefix(end-3:end)='';
-   end
-
-   if new_ext
+   if filetype == 2
       fn = sprintf('%s.nii',fileprefix);
 
       if ~exist(fn)
@@ -47,48 +27,8 @@ function [hdr, filetype, fileprefix, machine] = load_nii_hdr(fileprefix)
       error(msg);
    else
       fseek(fid,0,'bof');
-
-      if fread(fid,1,'int32') == 348
-         hdr = read_header(fid);
-         fclose(fid);
-      else
-         fclose(fid);
-
-         %  first try reading the opposite endian to 'machine'
-         %
-         switch machine,
-         case 'ieee-le', machine = 'ieee-be';
-         case 'ieee-be', machine = 'ieee-le';
-         end
-
-         fid = fopen(fn,'r',machine);
-
-         if fid < 0,
-            msg = sprintf('Cannot open file %s.',fn);
-            error(msg);
-         else
-            fseek(fid,0,'bof');
-
-            if fread(fid,1,'int32') ~= 348
-
-               %  Now throw an error
-               %
-               msg = sprintf('File "%s" is corrupted.',fn);
-               error(msg);
-            end
-
-            hdr = read_header(fid);
-            fclose(fid);
-         end
-      end
-   end
-
-   if strcmp(hdr.hist.magic, 'n+1')
-      filetype = 2;
-   elseif strcmp(hdr.hist.magic, 'ni1')
-      filetype = 1;
-   else
-      filetype = 0;
+      hdr = read_header(fid);
+      fclose(fid);
    end
 
    return					% load_nii_hdr
@@ -146,7 +86,7 @@ function [ hk ] = header_key(fid)
     else
        directchar = 'uchar=>char';
     end
-
+	
     hk.sizeof_hdr    = fread(fid, 1,'int32')';	% should be 348!
     hk.data_type     = deblank(fread(fid,10,directchar)');
     hk.db_name       = deblank(fread(fid,18,directchar)');
@@ -256,7 +196,7 @@ function [ hist ] = data_history(fid)
     else
        directchar = 'uchar=>char';
     end
-
+    
     hist.descrip     = deblank(fread(fid,80,directchar)');
     hist.aux_file    = deblank(fread(fid,24,directchar)');
     hist.qform_code  = fread(fid,1,'int16')';
@@ -272,9 +212,6 @@ function [ hist ] = data_history(fid)
     hist.srow_z      = fread(fid,4,'float32')';
     hist.intent_name = deblank(fread(fid,16,directchar)');
     hist.magic       = deblank(fread(fid,4,directchar)');
-
-    fseek(fid,253,'bof');
-    hist.originator  = fread(fid, 5,'int16')';
     
     return					% data_history
 
