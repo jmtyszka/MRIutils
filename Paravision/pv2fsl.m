@@ -14,12 +14,13 @@ function nii_names = pv2fsl(studydir,scans)
 % PLACE  : Caltech CBIC
 % DATES  : 01/29/2008 JMT Adapt from pvhardifsl.m (JMT)
 %          04/16/2009 JMT Add batch capabilities
+%          2015-03-26 JMT Update to R2014b
 %
 % Copyright 2008,2009 California Institute of Technology.
 % All rights reserved.
 
-version = 1.2;
-mat_arch = 'R2008b';
+version = 1.3;
+mat_arch = 'R2014b';
 
 if nargin < 1; studydir = pwd; end
 if nargin < 2; scans = 1; end

@@ -4,12 +4,12 @@ function pvhardifsl(study_dir,hardi_scans,gaussfr,samp_type)
 % USAGE: status = pvhardifsl(pvdir,dwinos,gaussfr,samp_type)
 %
 % ARGS:
-% pvdir      = paravision study directory containing scans
-% dwinos     = scan numbers of all ref and DWI scans
-% gaussfr    = gauss spatial filter radius (voxels) [0.5] 
-% pvhardifsl = 'rodent_brain'
-%              'primate_brain'
-%              'rodent_head'
+% study_dir   = paravision study directory containing scans
+% hardi_scans = scan numbers of all ref and DWI scans
+% gaussfr     = gauss spatial filter radius (voxels) [0.5] 
+% samp_type   = 'rodent_brain'
+%               'primate_brain'
+%               'rodent_head'
 %
 % AUTHOR : Mike Tyszka, Ph.D.
 % PLACE  : Caltech CBIC
@@ -17,12 +17,13 @@ function pvhardifsl(study_dir,hardi_scans,gaussfr,samp_type)
 %                         - Eliminate all but gauss filter
 %                         - Eliminate Analyze intermediates
 %          10/06/2007 JMT Correct vsize error and dtifit order
+%          2015-03-26 JMT Update for latest jmt_dr data
 %
-% Copyright 2006-2007 California Institute of Technology.
+% Copyright 2006-2015 California Institute of Technology.
 % All rights reserved.
 
-version = 1.0;
-mat_arch = 'R2007a';
+version = 1.1;
+mat_arch = 'R2014b';
 
 % Splash text
 fprintf('\n');
@@ -31,7 +32,7 @@ fprintf('-----------------------------------\n');
 fprintf('VERSION  : %0.1f\n',version);
 fprintf('PLATFORM : %s\n',mat_arch);
 fprintf('AUTHOR   : Mike Tyszka, Ph.D.\n');
-fprintf('Copyright 2007 California Insitute of Technology\n');
+fprintf('Copyright 2015 California Insitute of Technology\n');
 fprintf('All rights reserved\n');
 fprintf('For non-commercial research use only.\n\n');
 
@@ -51,10 +52,10 @@ if nargin < 4; samp_type = 'unknown'; end
 
 % Convert to numeric values (for standalone command line)
 if ischar(hardi_scans)
-  hardi_scans = str2num(hardi_scans);
+  hardi_scans = str2double(hardi_scans);
 end
 if ischar(gaussfr)
-  gaussfr = str2num(gaussfr);
+  gaussfr = str2double(gaussfr);
 end
 
 % Report arguments
@@ -176,7 +177,7 @@ for dc = 1:nhardi
   echopos = [info.echopos 50.0 50.0]; % In percent of k-space width
   k = pvmspatfilt(k,filt_type,fr,fw,echopos);
   
-  % Forward FFT of k-space/data/apes/debug/cleveland/Bonobo_01.HL1
+  % Forward FFT of k-space
   fprintf(fd_log,'Foward FFTing\n');
   s = abs(fftn(fftshift(k)));
   
