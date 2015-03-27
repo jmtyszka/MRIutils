@@ -24,7 +24,7 @@ function [s_corr,bval,bvec, s] = jmt_dr_recon(scan_dir)
 % All rights reserved.
 
 % Internal flags
-debug = true; % Lots of internal logging, figure generation, etc
+debug = false; % Lots of internal logging, figure generation, etc
 
 % Echo correction type: 'phase' or 'complex'
 corr_type = 'phase';
@@ -148,7 +148,7 @@ if debug
 
   % Reconstruct using median estimated phase only
   dphi_est = repmat(dphi_y_est,[nx 1 nz]);
-  k_est = k .* exp(-i * dphi_est);
+  k_est = k .* exp(-1i * dphi_est);
   k_est = pvmphaseroll(k_est,info);
   k_est = pvmspatfilt(k_est,filt_type,fr,fw,echopos);
   s_est = abs(fftn(fftshift(k_est)));

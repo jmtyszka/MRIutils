@@ -18,7 +18,7 @@ function [b,kx,ky,kz] = psqbmatrix(t,Gx,Gy,Gz,kinv,echoloc)
 % All rights reserved.
 
 % Verbosity flag
-verbose = 0;
+verbose = true;
 
 if nargin < 6;
   help psqbmatrix;

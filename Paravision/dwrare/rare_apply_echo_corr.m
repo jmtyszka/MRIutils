@@ -11,7 +11,7 @@ switch pars.corr_type
     amp = x((1:pars.etl)+pars.etl);
 end
 
-per_echo_corr = amp .* exp(i * phi);
+per_echo_corr = amp .* exp(1i * phi);
 
 % Allocate phase correction volume
 echo_corr = zeros(size(pars.k));
