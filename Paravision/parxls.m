@@ -1,50 +1,53 @@
-function parxls(examdir)
-% parxls(examdir)
+function parxls(studydir)
+% parxls(studydir)
 %
-% Create a summary list of all PARX series in an exam directory
+% Create a summary list of all Paravision scans in an study directory
 %
 % ARGS:
-% examdir = root directory of exam
-%
-% RETURNS:
-% serlist = structure array containing info about each series in exam 
+% studydir = study directory containing numbered scan directories
 %
 % AUTHOR : Mike Tyszka, Ph.D.
 % PLACE  : Caltech BIC
-% DATES  : 04/26/2001 From scratch
+% DATES  : 04/26/2001 JMT From scratch
 %          01/17/2006 JMT M-Lint corrections
+%          08/03/2006 JMT Sort scan numbers in listing
 %
 % Copyright 2000-2006 California Institute of Technology.
 % All rights reserved.
 
 % Defaults
-if nargin < 1; examdir = pwd; end
+if nargin < 1; studydir = pwd; end
 
 % Get the exam directory list
-dirlist = dir(examdir);
+dirlist = dir(studydir);
 
-% Loop over all entries
-for d = 1:length(dirlist)
+% First pass: find numbered scan directories
+scanlist = [];
+count = 0;
+for dc = 1:length(dirlist)
 
-  % Extract the
-  this_dir = dirlist(d).name;
-  this_path = [examdir '\' this_dir];
-  
-  % Only look at subdirectories
-  if ~strcmp(this_dir, '.') && ...
-      ~strcmp(this_dir, '..') && ...
-      dirlist(d).isdir
-
-    % Load the series information
-    [info, status] = parxloadinfo(this_path);
-    
-    if status == 1
-      
-      % Print a formated line for this series
-      parxdump(info);
-      
-    end
-   
+  sno = str2double(dirlist(dc).name);
+  if ~isempty(sno)
+    count = count + 1;
+    scanlist(count) = sno;
   end
     
+end
+
+% Sort scanlist ascending
+scanlist = sort(scanlist,'ascend');
+
+% Second pass: list paravision information for each scan
+for sc = 1:length(scanlist)
+  
+  % Load the scan information
+  [info, status] = parxloadinfo(fullfile(studydir,num2str(scanlist(sc))));
+    
+  if status == 1
+      
+    % Print a formated line for this scan
+    parxdump(info);
+      
+  end
+  
 end

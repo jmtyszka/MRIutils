@@ -41,13 +41,11 @@ if ~exist(reportdir,'dir')
   end
 end
 
-% Create index file for all studies in basedir
-studyindexpage = 'index.htm';
-studyindexpath = fullfile(reportdir,studyindexpage);
-fprintf('Creating base index page: %s\n',studyindexpage);
-fd = fopen(studyindexpath,'w');
+% Create index file for this study
+idxfile = fullfile(reportdir,'report.htm');
+fd = fopen(idxfile,'w');
 if fd < 0
-  fprintf('Could not create study index file\n');
+  fprintf('Could not create report.htm\n');
   return
 end
 
@@ -56,54 +54,18 @@ fprintf(fd,'<html>\n');
 fprintf(fd,'<body>\n');
 
 % Locate Paravision studies within this directory
-fprintf('Locating Paravision studies in %s\n', basedir);
 studylist = parxfindstudies(basedir);
 
 ns = length(studylist);
 fprintf('Found %d studies in %s\n',ns,basedir);
 
-% Bail out if no studies found
-if ns < 1
-  fprintf('Exiting\n');
-  return
-end
-
-% Print banner
-fprintf(fd,'<h1><font face="arial">Study Index</font></h1>\n');
-fprintf(fd,'<table border=0 cellpadding=5>\n');
-fprintf(fd,'<tr><td><b>Base Directory</b><td>%s</tr>\n', basedir);
-fprintf(fd,'<tr><td><b>Report Generated</b><td>%s by parxreport.m</tr>\n',datestr(now()));
-fprintf(fd,'</table><hr><br>\n');
-
-% Start new table for study index entries
-fprintf(fd,'<table border=0 cellpadding=5>\n');
-fprintf(fd,'<tr><td><b>Study ID<td><b>Name<td><b>Time</tr>');
-
 % Create entries for each study
 for sc = 1:length(studylist)
-  
-  % parxstudyreport returns the filename of the scan index HTML page
-  [scanindexpage,sinfo] = parxstudyreport(studylist{sc},reportdir,studyindexpage);
-  
-  if isempty(scanindexpage) || isempty(sinfo)
-    
-    fprintf('Empty index page or subject information\n');
-    
-  else
-    
-    fprintf(fd,'<tr>\n');
-  
-    % First column links to scan index for each study
-    fprintf(fd,'<td><a href="%s">%s</a><br>\n',scanindexpage,sinfo.id);
-    
-    fprintf(fd,'<td>%s<td>%s\n',sinfo.name,sinfo.time);
-    
-  end
+
+  idxfile = parxstudyreport(studylist{sc},reportdir);
+  fprintf(fd,'<a href="%s">%s</a><br>\n',idxfile,idxfile);
   
 end
-
-% Close out table
-fprintf(fd,'</table>\n');
 
 % Write HTML footer
 fprintf(fd,'</body>\n');
@@ -113,4 +75,4 @@ fprintf(fd,'</html\n>\n');
 fclose(fd);
 
 % Display the index page in Matlab's browser
-web(['file:///' studyindexpath]);
+web(['file:///' idxfile]);

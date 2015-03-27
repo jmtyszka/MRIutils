@@ -1,13 +1,11 @@
-function [scanreportpage,info,thumbfile] = parxscanreport(scandir,reportdir,scanindexpage)
-% [scanreportpage,info,thumbfile] = parxscanreport(scandir,reportdir,scanindexpage)
+function [reportfile,info,thumbfile] = parxscanreport(scandir,reportdir)
+% [reportfile,info,thumbfile] = parxscanreport(scandir,reportdir)
 %
 % Generate an HTML report for the given scan within the reportdir tree
 %
 % ARGS :
 % scandir   = Paravision scan directory containing method, imnd, etc files
 % reportdir = destination directory for HTML report
-% scanindexpage = name of index page in report directory for study containing
-%                  this scan
 %
 % RETURNS:
 % reportfile = report page filename
@@ -20,7 +18,6 @@ function [scanreportpage,info,thumbfile] = parxscanreport(scandir,reportdir,scan
 %          12/05/2005 JMT Make functional
 %          12/09/2005 JMT Add thumbnail and correct returned filenames
 %          01/17/2006 JMT M-Lint corrections
-%          01/27/2006 JMT Sort out index page references
 %
 % Copyright 2000-2006 California Institute of Technology.
 % All rights reserved.
@@ -29,16 +26,17 @@ function [scanreportpage,info,thumbfile] = parxscanreport(scandir,reportdir,scan
 if nargin < 1; scandir = pwd; end
 if nargin < 2; reportdir = fullfile(scandir,'report'); end
 
-% Image display parameters
-nx_web_base = 400;
-nx_thumb_base = 64;
-
 % Load paravision information for this scan
 info = parxloadinfo(scandir);
 
 if isequal(info.name,'Unknown')
   return
 end
+
+% Extract exam name, study number and scan number from the info structure
+exname  = info.name;
+studyno = info.studyno;
+scanno  = info.scanno;
 
 % Make the report directory if necessary
 if ~exist(reportdir,'dir')
@@ -50,39 +48,36 @@ if ~exist(reportdir,'dir')
   end
 end
 
-scannamestub = sprintf('%s_%04d_%04d',info.name,info.studyno,info.scanno);
-scanreportpage = sprintf('%s.htm',scannamestub);
-scanreportpath = fullfile(reportdir,scanreportpage);
+reportstub = sprintf('%s_%04d_%04d',exname,studyno,scanno);
+reportfile = sprintf('%s.htm',reportstub);
+reportpath = fullfile(reportdir,reportfile);
 
 % Open the report file
-fd = fopen(scanreportpath,'w');
+fd = fopen(reportpath,'w');
 if fd < 1
-  fprintf('Could not open report page: %s\n',scanreportpath);
+  fprintf('Could not open %s to write\n',reportfile);
   return
 end
+
+% HTML constant tags
+fonttag = '<font face="arial">';
+bigfonttag = '<font face="arial" size=+2 color=#ffffff><b>';
 
 % Write HTML header
 fprintf(fd,'<html>\n');
 fprintf(fd,'<body>\n');
 
-% Insert return link
-fprintf(fd,'<h2><a href="%s">Return to Scan Index</a></h2>\n',scanindexpage);
+% Insert study index link
+fprintf(fd,'<a href="index.htm"><font face="arial" size=+2>STUDY INDEX</a><br>\n');
 
 % Start outer table
-fprintf(fd,'<table width=100%% border=0>\n');
-
-% Table column headings
-fprintf(fd,'<tr align=center valign=top>\n');
-fprintf(fd,'<td width="40%%"><h2>Information</h2></td>\n');
-fprintf(fd,'<td width="30%%"><h2>Slice Montage</h2></td>\n');
-fprintf(fd,'<td width="30%%"><h2>Center Slice</h2></td>\n');
-fprintf(fd,'</tr>\n');
+fprintf(fd,'<table width=100%% border=1 cellpad=5>\n');
 
 % Main table row
-fprintf(fd,'<tr align=center valign=top>\n');
+fprintf(fd,'<tr>\n');
 
-% Insert sample information cell
-SampleInfo(fd,info);
+% Image cell
+fprintf(fd,'<td width=512 height=512>\n');
 
 % Generate thumbnail montage or spectrum graph
 switch info.method
@@ -98,14 +93,11 @@ switch info.method
 
     % Eliminate singlet dimensions
     s = squeeze(s);
-    
+
     if isempty(s)
       % Replace empty data with a dummy 3D image
       s = ones(8,8,9);
     end
-
-    % Get image dimensions
-    [nx,ny,nz] = size(s);
 
     % Auto crop 2D and 3D images
     switch info.ndim
@@ -114,134 +106,92 @@ switch info.method
 
         % Normalize image
         s = s / max(s(:)+eps);
-        
-        % Get image dimensions
-        [nx,ny,nz] = size(s);
 
         % If total slices > 25, downsample slices
+        sdim = size(s);
+        nz = sdim(3);
         if nz > 25
           s = s(:,:,fix(linspace(1,nz,25)));
-          nz = 25;
         end
 
         % Create a montage of the data
         m = bic_montage(s);
-        [nxm,nym] = size(m);
 
-        % Calculate true aspect ratio of montage
-        fovx = info.fov(1);
-        fovy = info.fov(2);
-
-        if fovx == 0 || fovy == 0
-          ar = 1;
-        else
-          ar = fovx / fovy;
-        end
-
-        % Create thumb and montage for web display
-        if ar > 1
-          nx_web = nx_web_base;
-          ny_web = round(nx_web_base / ar);
-          nx_thumb = nx_thumb_base;
-          ny_thumb = round(nx_thumb_base / ar);
-        else
-          nx_web = round(nx_web_base * ar);
-          ny_web = nx_web_base;
-          nx_thumb = round(nx_thumb_base * ar);
-          ny_thumb = nx_thumb_base;
-        end
-        
-        % Isovoxel the montage
-        m = imresize(m,[nx_web,ny_web],'bilinear');
-        
-        % Create a central slice image
-        sl = s(:,:,round(nz/2));
-        sl = imresize(sl,[nx_web,ny_web],'bilinear');
-        
         % Create a thumbnail
-        thumb = imresize(sl,[nx_thumb ny_thumb],'bilinear');
+        sdim = size(s);
+        nz = sdim(3);
+        thumb = s(:,:,round(nz/2));
+        thumb = imresize(thumb,[64 64]);
 
       otherwise
 
-        % Dummy images
-        m = zeros(nx_web_base,nx_web_base);
-        sl = m;
-        thumb = zeros(nx_thumb_base,nx_thumb_base);
+        % Dummy montage
+        m = zeros(8,8);
 
-        % Dumy web image dimensions
-        nx_web = nx_web_base;
-        ny_web = nx_web_base;
+        % Dummy thumbnail
+        thumb = zeros(64,64);
 
     end
 
     % Write the montage as a PNG file
-    mname = sprintf('%s.png',scannamestub);
+    mname = sprintf('%s.png',reportstub);
     mpath = fullfile(reportdir,mname);
     imwrite(m,mpath,'png');
 
-    % Write the central slice as a PNG file
-    slname = sprintf('%s_slice.png',scannamestub);
-    slpath = fullfile(reportdir,slname);
-    imwrite(sl,slpath,'png');
-
     % Write the thumbnail as a PNG file
-    thumbfile = sprintf('%s_thumb.png',scannamestub);
+    thumbfile = sprintf('%s_thumb.png',reportstub);
     thumbpath = fullfile(reportdir,thumbfile);
     imwrite(thumb,thumbpath,'png');
-    
-    % Add a link to the montage and central slice
-    fprintf(fd,'<td valign=top align=center>\n');
-    fprintf(fd,'<img src="%s" height=%d width=%d>\n',mname,nx_web,ny_web);
-    fprintf(fd,'<td valign=top align=center>\n');
-    fprintf(fd,'<img src="%s" height=%d width=%d>\n',slname,nx_web,ny_web);
+
+    % Add a link to the image
+    fprintf(fd,'<img src="%s" height=512 width=512>\n',mname);
 
 end
 
-% End outer table
-fprintf(fd,'</table>\n');
-
-% Write HTML footer
-fprintf(fd,'</body>\n');
-fprintf(fd,'</html>\n');
-
-% Close the report file
-fclose(fd);
-
-%------------------------------------------------
-% Insert sample information within a table cell
-%------------------------------------------------
-
-function SampleInfo(fd,info)
+% End image cell
+fprintf(fd,'</td>\n');
 
 % Start info table within a cell
-fprintf(fd,'<td valign=middle bgcolor=#bbbbff>\n');
 
-fprintf(fd,'<table width=100%% border=0 cellpad=5 bgcolor=#bbbbff>\n');
-fprintf(fd,'<tr><td width=25%%><b>Exam Name<td width=75%%>%s</tr>\n', info.name);
-fprintf(fd,'<tr><td><b>Study Number<td>%d</tr>\n', info.studyno);
-fprintf(fd,'<tr><td><b>Scan Number<td>%d</tr>\n', info.scanno);
-fprintf(fd,'<tr><td><b>Subject ID<td>%s</tr>\n', info.id);
-fprintf(fd,'<tr><td><b>Study name<td>%s</tr>\n', info.studyname);
-fprintf(fd,'<tr><td><b>Method<td>%s</tr>\n', info.method);
-fprintf(fd,'<tr><td><b>Scan time<td>%s</tr>\n', info.time);
-fprintf(fd,'<tr><td><b>TR<td>%0.1f ms</tr>\n', info.tr);
-fprintf(fd,'<tr><td><b>TE<td>%0.1f ms</tr>\n', info.te);
-fprintf(fd,'<tr><td><b>Averages<td>%d</tr>\n', info.navs);
-fprintf(fd,'<tr><td><b>Dimensions<td>%d</tr>\n', info.ndim);
+fprintf(fd,'<td valign=top>\n');
+fprintf(fd,'<table width=100%% bgcolor=#333333>\n');
+fprintf(fd,'<tr><td>%s%s %sStudy %d %sScan %d</tr>\n', bigfonttag, exname, bigfonttag, studyno, bigfonttag, scanno);
+fprintf(fd,'</table><br>\n');
+
+fprintf(fd,'<table width=100%% border=0 cellpad=5 bgcolor=#aaaaff>\n');
+fprintf(fd,'<tr><td>%sSubject ID<td>%s</tr>\n',fonttag, info.id);
+fprintf(fd,'<tr><td>%sStudy name<td>%s</tr>\n',fonttag, info.studyname);
+fprintf(fd,'<tr><td>%sMethod<td>%s</tr>\n',fonttag, info.method);
+fprintf(fd,'<tr><td>%sScan time<td>%s</tr>\n',fonttag, info.time);
+fprintf(fd,'<tr><td>%sTR<td>%s%0.1f ms</tr>\n',fonttag, fonttag, info.tr);
+fprintf(fd,'<tr><td>%sTE<td>%s%0.1f ms</tr>\n',fonttag, fonttag, info.te);
+fprintf(fd,'<tr><td>%sAverages<td>%s%d</tr>\n',fonttag, fonttag, info.navs);
+fprintf(fd,'<tr><td>%sDimensions<td>%s%d</tr>\n',fonttag, fonttag, info.ndim);
 
 % Dimension specific
 dim = info.sampdim;
 fov = info.fov;
 vsize = info.vsize;
-fprintf(fd,'<tr><td><b>Matrix<td>%d x %d x %d x %d</tr>\n', dim(1), dim(2), dim(3), dim(4));
-fprintf(fd,'<tr><td><b>FOV<td>%0.1f mm x %0.1f mm x %0.1f mm</tr>\n', fov(1), fov(2), fov(3));
-fprintf(fd,'<tr><td><b>Voxel<td>%0.1f um x %0.1f um x %0.1f um</tr>\n', vsize(1), vsize(2), vsize(3));
-fprintf(fd,'<tr><td><b>Slice<td>%0.2f mm</tr>\n', info.slthick);
+fprintf(fd,'<tr><td>%sMatrix<td>%s%d x %d x %d x %d</tr>\n',fonttag, fonttag, dim(1), dim(2), dim(3), dim(4));
+fprintf(fd,'<tr><td>%sFOV<td>%s%0.1f mm x %0.1f mm x %0.1f mm</tr>\n',fonttag, fonttag, fov(1), fov(2), fov(3));
+fprintf(fd,'<tr><td>%sVoxel<td>%s%0.1f um x %0.1f um x %0.1f um</tr>\n',fonttag, fonttag, vsize(1), vsize(2), vsize(3));
+fprintf(fd,'<tr><td>%sSlice<td>%s%0.2f mm</tr>\n',fonttag, fonttag, info.slthick);
 
 % Remarks
-fprintf(fd,'<tr><td valign=top><b>Remarks<td>%s</tr>\n', info.remarks);
+fprintf(fd,'<tr><td valign=top>%sRemarks<td>%s</tr>\n',fonttag, info.remarks);
 
 % End info table
 fprintf(fd,'</table></td><br>\n');
 
-return
+% End outer table
+fprintf(fd,'<table>\n');
+
+% Write HTML footer
+fprintf(fd,'</body>\n');
+fprintf(fd,'</html\n>\n');
+
+% Close the report file
+fclose(fd);
+
+% Display the resulting webpage in Matlab's browser
+% web(['file:///' reportpath]);

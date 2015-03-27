@@ -210,4 +210,4 @@ Gz = GradTrap(t,Gz,-Gd(3),t0_gdiff_4,tramp,opts.delta4-tramp);
 % k-space inversion points
 %--------------------------------------------------------------------
 
-kinv = {0.25 * t_TE_DW, 0.75 * t_TE_DW};
+kinv = [0.25 0.75] * t_TE_DW;

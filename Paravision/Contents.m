@@ -26,7 +26,7 @@
 %   parxloadmrsfid     - [k, info] = parxloadmrsfid(imnddir)
 %   parxloadpc         - [fid, info] = parxloadpc(imnddir)
 %   parxloadpcnav      - [k, navk, examinfo] = parxloadpcnav(imnddir, verbose)
-%   parxls             - parxls(examdir)
+%   parxls             - parxls(studydir)
 %   parxmrsrecon       - [s,ppm,info] = parxmsrecon(scandir,zpad,lb,hamming,autophase)
 %   parxplotmrs        - parxplotmrs(imnddir, ppmrange, srange)
 %   parxrecon          - [s,info,errmsg] = parxrecon(sdir,options)
@@ -44,3 +44,5 @@
 %   pvmload2dseq       - [s, info, errmsg] = pvmload2dseq(scandir)
 %   pvmloadfid         - [k,info,errmsg] = pvmloadfid(serdir)
 %   pvmloadinfo        - [info, status, errmsg] = pvmloadinfo(serdir)
+%   pvmphaseroll       - kr = pvmphaseroll(k,info)
+%   pvmspatfilt        - Apply spatial filter to k-space data

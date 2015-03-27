@@ -1,9 +1,13 @@
-function theta_total = total_rotation(theta_x, theta_y, theta_z)
-% Total rotation for a three-axis gimble rotation
+function theta_total, axis_total = total_rotation(theta_x, theta_y, theta_z)
+% Total rotation and axis for a three-axis gimble rotation
 %
 % AUTHOR : Mike Tyszka, Ph.D.
 % PLACE  : Caltech
-% DATES  : 02/10/2012 From scratch
+% DATES  : 2012-10-02 JMT From scratch
+%          2014-12-18 JMT Add total rotation axis calculation
+%
+% Copyright 2014 California Institute of Technology
+% All rights reserved.
 
 theta_x = theta_x(:);
 theta_y = theta_y(:);
@@ -11,7 +15,9 @@ theta_z = theta_z(:);
 
 n = length(theta_x);
 
+% Init return arrays
 theta_total = zeros(n,1);
+axis_total = zeros(n,3);
 
 for ac = 1:length(theta_x)
   
@@ -33,5 +39,8 @@ for ac = 1:length(theta_x)
   
   % Total rotation angle (radians)
   theta_total(ac) = acos((trace(Rtot)-1)/2);
+  
+  % Total rotation axis
+  ax = 
   
 end

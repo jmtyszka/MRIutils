@@ -21,8 +21,8 @@ if nargin < 1
   return
 end
 
-fprintf('%-4d', info.serno);
-fprintf('%-16s', info.name);
+fprintf('%-4d', info.scanno);
+fprintf('%-24s', info.name);
 fprintf('%-12s', info.method);
 fprintf('%5.0f/%-5.0f ', info.tr, info.te);
 
@@ -54,6 +54,11 @@ otherwise
     fprintf('%0.1fx', info.fov(d));
   end
   fprintf('%0.1f ', info.fov(ndim));
+end
+
+% b factor is present
+if isfield(info,'bfactor')
+  fprintf('%0.1f ',info.bfactor);
 end
 
 fprintf('\n');

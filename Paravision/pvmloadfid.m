@@ -66,7 +66,7 @@ fclose(fd);
 nx = info.sampdim(1);
 ny = info.sampdim(2);
 nz = info.sampdim(3);
-ni = info.sampdim(4)/2;
+ni = info.sampdim(4);
 
 % Handle digital filter acquisition
 if nx < 128

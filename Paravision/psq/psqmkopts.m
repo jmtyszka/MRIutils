@@ -13,9 +13,6 @@ function opts = psqmkopts(scandir)
 % Copyright 2004 California Institute of Technology.
 % All rights reserved.
 
-% Get PV info from scandir
-info = parxloadinfo(scandir);
-
 % Construct options structure based on method name
 switch upper(info.method)
   

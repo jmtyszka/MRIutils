@@ -109,15 +109,15 @@ switch info.recotx(1)
   case 1
     % Swap XY
     info.recodim = info.recodim([2 1 3 4]);
-    info.vsize   = info.vsize([2 1 3 4]);
+    info.vsize   = info.vsize([2 1 3]);
   case 2
     % Swap XZ
     info.recodim = info.recodim([3 2 1 4]);
-    info.vsize   = info.vsize([3 2 1 4]);
+    info.vsize   = info.vsize([3 2 1]);
   case 3
     % Swap YZ
     info.recodim = info.recodim([1 3 2 4]);
-    info.vsize   = info.vsize([1 3 2 4]);
+    info.vsize   = info.vsize([1 3 2]);
   otherwise
     % Do nothing
 end

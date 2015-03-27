@@ -9,10 +9,13 @@ function [s,info,errmsg] = parxrecon(sdir,options)
 % sdir    = scan directory containing fid to recon
 % options = recon options
 % .filttype  = 'none', 'hamming', 'gauss' or 'fermi' ['fermi']
-% .fr        = filter radius [0.47]
+% .fr        = filter radius [0.47]. For Gauss filter, spatial HWHM in
+%              voxels
 % .fw        = filter width (Fermi only) [0.03]
 % .zpad      = zero padding factor [1]
 % .fidw      = FID filter width [0.05] 0.0 -> no filter applied
+% .imtype    = returned image type 'm' (magnitude) or 'c' (complex) ['m']
+% .zip       = zipper plane to correct [x y z]. Use -1 for no correction.
 %
 % RETURNS:
 % s      = reconstructed magnitude dataset
@@ -32,7 +35,7 @@ function [s,info,errmsg] = parxrecon(sdir,options)
 % All rights reserved.
 
 % Internal flags
-verbose = 1;
+verbose = 0;
 
 if verbose; fprintf('Entering PARXRECON\n'); end
 
@@ -41,10 +44,12 @@ if nargin < 2; options.filttype = 'none'; end
 
 % Tidy up options structure
 if ~isfield(options,'filttype'); options.filttype = 'none'; end
-if ~isfield(options,'fr');       options.fr = 0.45;         end
+if ~isfield(options,'fr');       options.fr = 0.5;          end
 if ~isfield(options,'fw');       options.fw = 0.01;         end
 if ~isfield(options,'zpad');     options.zpad = 1;          end
 if ~isfield(options,'fidw');     options.fidw = 0;          end
+if ~isfield(options,'imtype');   options.imtype = 'm';      end
+if ~isfield(options,'zip');      options.zip = [-1 -1 -1];   end
 
 % Initialize return matrix
 s = [];
@@ -88,7 +93,7 @@ switch info.uflare_echopath
 
     % Apply phase rolls from geometry prescription to each dimension
     if verbose; fprintf('  Applying k-space phase roll\n'); end
-    k = parxphaseroll(k,info);
+    k = pvmphaseroll(k,info);
     
     %----------------------------------------------------------
     % Spatial filter
@@ -111,13 +116,14 @@ switch info.uflare_echopath
         k = k .* Hfilt;
               
       case 'gauss'
-        if verbose; fprintf('Gauss [%f voxels]\n',options.fr); end
+        gauss_fwhm = options.fr * 2;
+        if verbose; fprintf('Radial Gauss [FWHM %f voxels]\n',gauss_fwhm); end
         switch nDim
           case 2
-            Hfilt = gauss2([nx ny], options.fr, info.echopos/100);
+            Hfilt = gauss2([nx ny], gauss_fwhm, info.echopos/100);
             Hfilt = repmat(Hfilt,[1 1 nz]);
           case 3
-            Hfilt = gauss3([nx ny nz], options.fr, info.echopos/100);
+            Hfilt = gauss3([nx ny nz], gauss_fwhm, info.echopos/100);
         end
         
         % Apply filter
@@ -209,9 +215,9 @@ switch info.uflare_echopath
     switch nDim
       case 2
         k = fftshift(fftshift(k,1),2);
-        s = abs(fft(fft(k,[],1),[],2));
+        s = fft(fft(k,[],1),[],2);
       case 3
-        s = abs(fftn(fftshift(k)));
+        s = fftn(fftshift(k));
     end
     
     % Adjust center shift in the 2nd and 3rd PE dimension
@@ -220,6 +226,31 @@ switch info.uflare_echopath
         s = fftshift(fftshift(s,2),3);
       otherwise
         % Do nothing
+    end
+    
+    % Adjust return type of image
+    switch options.imtype
+      case 'm'
+        s = abs(s);
+      case 'c'
+        % Do nothing
+    end
+    
+    % Apply zipper correction
+    zipx = options.zip(1);
+    zipy = options.zip(2);
+    zipz = options.zip(3);
+    if zipx > 0
+      fprintf('Correcting x zipper at plane %d\n', zipx);
+      s(zipx,:,:) = 0; %(s(zipx-1,:,:) + s(zipx+1,:,:))/2;
+    end
+    if zipy > 0
+      fprintf('Correcting y zipper at plane %d\n', zipy);
+      s(:,zipy,:) = 0; %(s(:,zipy-1,:) + s(:,zipy+1,:))/2;
+    end
+    if zipz > 0
+      fprintf('Correcting z zipper at plane %d\n', zipz);
+      s(:,:,zipz) = 0; %(s(:,:,zipz-1) + s(:,:,zipz+1))/2;
     end
     
   case 'Displaced'
@@ -239,8 +270,8 @@ switch info.uflare_echopath
     
     % Apply phase rolls from geometry prescription to each dimension
     if verbose; fprintf('  Applying phase roll\n'); end
-    kA = parxphaseroll(kA,info);
-    kB = parxphaseroll(kB,info);
+    kA = pvmphaseroll(kA,info);
+    kB = pvmphaseroll(kB,info);
     
     % FFT first and second echoes
     if verbose; fprintf('  FFTing k-space\n'); end
@@ -267,14 +298,7 @@ end
 if info.nechoes > 1 && info.ndim == 2
   % Initial data order is (X,Y,Z*TE) with echo inner loop
   % in the 3rd dimension
-  nz
-  nx
-  ny
-  
-  info.nechoes
-  
-  size(s)
-  s = reshape(s,[nx,ny,1,nz]);
+  s = reshape(s,[nx,ny,info.nechoes,nz/info.nechoes]);
   % Place echoes in last dimension (X,Y,Z,TE)
   s = permute(s,[1 2 4 3]);
 end
