@@ -1,10 +1,5 @@
-<<<<<<< HEAD
-function theta_total, axis_total = total_rotation(theta_x, theta_y, theta_z)
-% Total rotation and axis for a three-axis gimble rotation
-=======
 function [theta_total, axis_total] = total_rotation(theta_x, theta_y, theta_z)
 % Total rotation for a three-axis gimble rotation
->>>>>>> FETCH_HEAD
 %
 % USAGE : [theta_total, axis_total] = total_rotation(theta_x, theta_y, theta_z)
 %
@@ -12,19 +7,11 @@ function [theta_total, axis_total] = total_rotation(theta_x, theta_y, theta_z)
 %
 % AUTHOR : Mike Tyszka, Ph.D.
 % PLACE  : Caltech
-<<<<<<< HEAD
-% DATES  : 2012-10-02 JMT From scratch
-%          2014-12-18 JMT Add total rotation axis calculation
-%
-% Copyright 2014 California Institute of Technology
-% All rights reserved.
-=======
 % DATES  : 2012-02-10 JMT From scratch
 %          2015-01-21 JMT Add total rotation axis code from thread above
 %
 % Copyright 2015 California Institute of Technology
 % All rights reserved
->>>>>>> FETCH_HEAD
 
 theta_x = theta_x(:);
 theta_y = theta_y(:);
@@ -33,15 +20,9 @@ theta_z = theta_z(:);
 % Find length of angle vectors
 n = length(theta_x);
 
-<<<<<<< HEAD
-% Init return arrays
-theta_total = zeros(n,1);
-axis_total = zeros(n,3);
-=======
 % Make space for results
 theta_total = zeros(n,1);
 axis_total  = zeros(n,3);
->>>>>>> FETCH_HEAD
 
 for ac = 1:length(theta_x)
   
@@ -82,13 +63,7 @@ for ac = 1:length(theta_x)
     u = [1, 0, 0];
   end
   
-<<<<<<< HEAD
-  % Total rotation axis
-  ax = 
-  
-=======
   % Save axis result
   axis_total(ac,:) = u;
-    
->>>>>>> FETCH_HEAD
+
 end
