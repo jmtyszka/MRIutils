@@ -10,10 +10,7 @@ function jmt_dr_hardi_recon(study_dir, hardi_scans, samp_type, method)
 % samp_type = 'rodent_head' or 'other' ['other']
 % method = phase correction method:
 %   'none'
-%   'simple'
-%   'reduced'
-%   'unwrapped'
-%   'unwrapped_center'
+%   'estimated'
 %   'optimized' [default]
 %
 % AUTHOR : Mike Tyszka, Ph.D.
@@ -38,10 +35,14 @@ if nargin < 2
 end
 
 if nargin < 3; samp_type = 'other'; end
-if nargin < 4; method = 'optimized'; end
+if nargin < 4; method = 'estimated'; end
 
 % Internal flags
-debug = 0; % Lots of internal logging, figure generation, etc
+% Lots of internal logging, figure generation, etc if true
+debug = true;
+
+% Eddy current correction flag
+do_eddy = false;
 
 % Echo correction type: 'phase' or 'complex'
 corr_type = 'phase';
@@ -51,8 +52,8 @@ flip = [1 1 -1]';
 
 % Spatial filtering
 filt_type = 'gauss';
-fr = 0.5;
-fw = 0.0;
+fr = 2.0; % For Gauss filter, this is the FWHM of the PSF in voxels
+fw = 0.0; % Unused
 
 % Count number of HARDI scans
 nhardi = length(hardi_scans);
@@ -141,28 +142,21 @@ end
 fprintf('Reordering ky for S(0) k-space\n');
 k_s0(:,ky_order(:),:,:) = k_s0;
 
-%% Blind phase correction of S(0) k-space
-fprintf('Blind phase correction of S(0) k-space\n');
-k_s0 = rare_phaseoptim2(k_s0, ky_order, corr_type);
-
-% Reference phase
-phi_0 = angle(k_s0);
-
 %% Reconstruction loop
 % Loop over all S(0) and DWI scans
 
 bvals = zeros(nhardi,1);
 bvecs = zeros(nhardi,3);
 
-if debug && isequal(method,'optimized')
-  log_file = fullfile(study_dir,'optimlog.txt');
+if debug && isequal(method, 'optimized')
+  log_file = fullfile(study_dir, 'optimlog.txt');
   fd_log = fopen(log_file,'w');
   if fd_log < 0
     fprintf('Could not open log file to write\n');
     return
   end
-  fprintf('%6s %12s %12s %12s %6s %6s %8s %8s %8s\n',...
-    '#','RawRes','RndRes','EstRes','RndIt','EstIt','Gx','Gy','Gz');
+  fprintf(fd_log, '%6s %12s %12s %6s %8s %8s %8s\n',...
+    '#','RawRes','EstRes','EstIt','Gx','Gy','Gz');
 end
 
 % Loop includes S(0) scans
@@ -232,10 +226,13 @@ for dc = 1:nhardi
 
   if info.bfactor > 0.0
     switch lower(method)
+      case 'estimated'
+        [k_corr, optres] = rare_phaseoptim(k_s0, k, ky_order);
       case 'optimized'
-        [k_corr, x_optim, optres] = rare_phaseoptim2(k, ky_order, corr_type);
+        [k_corr, ~, optres] = rare_phaseoptim2(k, ky_order, corr_type);
       otherwise
-        k_corr = jmt_ddr_phasecorr(k, method, info, phi_0, debug);
+        % Do nothing
+        k_corr = k;
     end
   else
     k_corr = k;
@@ -268,62 +265,42 @@ for dc = 1:nhardi
   if debug && info.bfactor > 0.0 && isequal(method,'optimized')
 
     % Save optimization results in log file
-    fprintf('%6d %12.5g %12.5g %12.5g %6d %6d %8.3f %8.3f %8.3f\n',...
-      dc, optres.resnorm_raw, optres.resnorm_rand, optres.resnorm_est,...
-      optres.iters_rand, optres.iters_est,...
+    fprintf(fd_log, '%6d %12.5g %12.5g %6d %8.3f %8.3f %8.3f\n', ...
+      dc, optres.resnorm_raw, optres.resnorm_est, optres.iters_est, ...
       info.diffdir(1),info.diffdir(2),info.diffdir(3));
-
-    [nx,ny,nz] = size(k);
 
     % Reconstruct uncorrected volume
     k_uncorr = pvmphaseroll(k,info);
-    k_uncorr = pvmspatfilt(k_uncorr,filt_type,fr,fw,echopos);
+    k_uncorr = pvmspatfilt(k_uncorr, filt_type, fr, fw, echopos);
     s_uncorr = abs(fftn(fftshift(k_uncorr)));
 
-    % Reconstruct using median estimated phase only
-    dphi_est = repmat(dphi_y_est,[nx 1 nz]);
-    k_est = k .* exp(-1i * dphi_est);
-    k_est = pvmphaseroll(k_est,info);
-    k_est = pvmspatfilt(k_est,filt_type,fr,fw,echopos);
-    s_est = abs(fftn(fftshift(k_est)));
-
-    figure(1); colormap(gray);
+    % Construct figure
+    figure(100); colormap(gray);
     set(gcf,'Position',[360 60 560 800]);
 
-    hz = fix(nz/2);
-    ky = 1:ny;
-
-    subplot(311), plot(ky,dphi_y,ky,dphi_y_est,ky,dphi_y_optim);
-    legend('Raw Projection','Estimate','Optimized','Location','Best');
-    xlabel('ky');
-    ylabel('\Delta\phi(ky) (radians)');
-    title(sprintf('DWI %d : (%0.3f,%0.3f,%0.3f)',...
+    set(gcf, 'numbertitle', 'off', 'name', ...
+      sprintf('DWI %d : (%0.3f,%0.3f,%0.3f)',...
       dc,info.diffdir(1),info.diffdir(2),info.diffdir(3)));
 
-    normlims = [min(s_uncorr(:)) max(s_uncorr(:))];
+    % Slice and intensity limits
+    hz = fix(size(k,3)/2);
+    normlims = robustrange(s_uncorr(:),[5, 99],1000);
     ghostlims = normlims / 10;
-
-    subplot(334), imagesc(s_uncorr(:,:,hz),normlims);
+    
+    % Draw subplots
+    subplot(221), imagesc(s_uncorr(:,:,hz),normlims);
     axis image xy off;
     title('Uncorrected');
 
-    subplot(335), imagesc(s_est(:,:,hz),normlims);
-    axis image xy off;
-    title('Median estimated');
-
-    subplot(336), imagesc(s_corr(:,:,hz),normlims);
+    subplot(222), imagesc(s_corr(:,:,hz),normlims);
     axis image xy off;
     title(['Correction : ' method]);
 
-    subplot(337), imagesc(s_uncorr(:,:,hz),ghostlims);
+    subplot(223), imagesc(s_uncorr(:,:,hz),ghostlims);
     axis image xy off;
     title('Uncorrected');
 
-    subplot(338), imagesc(s_est(:,:,hz),ghostlims);
-    axis image xy off;
-    title('Median estimated');
-
-    subplot(339), imagesc(s_corr(:,:,hz),ghostlims);
+    subplot(224), imagesc(s_corr(:,:,hz),ghostlims);
     axis image xy off;
     title(['Correction : ' method]);
 
@@ -386,46 +363,49 @@ end
 
 %% Data output
 
-fprintf('Writing HARDI data to FSL directory\n');
+fprintf('Writing HARDI data to directory\n');
 
-fsl_dir = fullfile(study_dir,'FSL');
-if ~exist(fsl_dir,'dir');
-  fprintf('Creating FSL directory\n');
-  mkdir(fsl_dir);
+hardi_dir = fullfile(study_dir,'HARDI');
+if ~exist(hardi_dir,'dir');
+  fprintf('Creating HARDI directory\n');
+  mkdir(hardi_dir);
 end
 
 % Write bvals and bvecs text files to FSL directory
 fprintf('Writing b values and vectors to FSL directory\n');
-fslb(fsl_dir,bvals,bvecs);
+fslb(hardi_dir,bvals,bvecs);
 
 % Use FOV and sampled matrix size to calculate reconstructed vsize
 vsize = info.fov(1:3) ./ info.sampdim(1:3); % in mm for Nifti-1
 
-% Flip sign of A11 element of matrices
-% This forces radiological convention for non-oblique datasets
-% nii_mat(1,1) = -nii_mat(1,1);
-% nii_mat0(1,1) = -nii_mat0(1,1);
-
 % Save DWI image volume
 fprintf('Saving enormous 4D HARDI image\n');
-hardi_name = fullfile(fsl_dir,'hardi.nii.gz');
-nii = make_nii(s_4d, vsize);
-save_nii(nii, hardi_name);
+hardi_name = fullfile(hardi_dir,'hardi.nii.gz');
+cit_save_nii(hardi_name, s_4d, vsize);
 fprintf('Finished\n');
 
 % Change to FSL directory
 cwd = pwd;
-cd(fsl_dir);
+cd(hardi_dir);
 
 % FSL FDT eddy current distortion correction
-fprintf('Starting FSL eddy current correction\n');
-!eddy_correct hardi data 0
+if do_eddy
+  
+  fprintf('Starting FSL eddy current correction\n');
+  !eddy_correct hardi data 0
+  
+  % Reload eddy corrected data
+  fprintf('Reload DWIs\n');
+  data_name = fullfile(hardi_dir,'data.nii.gz');
+  nii = load_nii(data_name);
+  s_4d = nii.img;
 
-% Reload eddy corrected data
-fprintf('Reload DWIs\n');
-data_name = fullfile(fsl_dir,'data.nii.gz');
-nii = load_nii(data_name);
-s_4d = nii.img;
+else
+  
+  fprintf('Skipping eddy current correction\n');
+  !imcp hardi data
+
+end
 
 %% Auxilliary volumes
 % Ouput idwi, nodif and nodif_brain_mask
@@ -446,23 +426,20 @@ end
 
 % Save auxilliary volumes
 fprintf('Writing iDWI\n');
-idwi_name = fullfile(fsl_dir,'idwi.nii.gz');
-nii = make_nii(idwi, vsize);
-save_nii(nii, idwi_name);
+idwi_name = fullfile(hardi_dir,'idwi.nii.gz');
+cit_save_nii(idwi_name, idwi, vsize);
 
 fprintf('Writing nodif\n');
-nodif_name = fullfile(fsl_dir,'nodif.nii.gz');
-nii = make_nii(nodif, vsize);
-save_nii(nii, nodif_name);
+nodif_name = fullfile(hardi_dir,'nodif.nii.gz');
+cit_save_nii(nodif_name, nodif, vsize);
 
 fprintf('Writing nodif_brain_mask\n');
-nodif_brain_mask_name = fullfile(fsl_dir,'nodif_brain_mask.nii.gz');
-nii = make_nii(nodif_brain_mask, vsize);
-save_nii(nii, nodif_brain_mask_name);
+nodif_brain_mask_name = fullfile(hardi_dir,'nodif_brain_mask.nii.gz');
+cit_save_nii(nodif_brain_mask_name, nodif_brain_mask, vsize);
 
 % FSL FDT tensor fitting
 fprintf('FSL dtifit\n');
-!dtifit --data=data --out=dti --mask=nodif_brain_mask --bvecs=bvecs --bvals=bvals
+!dtifit -k data -o dti -m nodif_brain_mask.nii.gz -r bvecs -b bvals -V
 
 % Return to current directory
 cd(cwd);
@@ -470,3 +447,4 @@ cd(cwd);
 fprintf('**********\n');
 fprintf('Recon completed : %s\n',datestr(now));
 fprintf('**********\n');
+

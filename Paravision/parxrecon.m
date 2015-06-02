@@ -13,9 +13,10 @@ function [s,info,errmsg] = parxrecon(sdir,options)
 %              voxels
 % .fw        = filter width (Fermi only) [0.03]
 % .zpad      = zero padding factor [1]
-% .fidw      = FID filter width [0.05] 0.0 -> no filter applied
+% .fidw      = FID filter width [0.0 -> no filter applied]. 0.05 works.
 % .imtype    = returned image type 'm' (magnitude) or 'c' (complex) ['m']
 % .zip       = zipper plane to correct [x y z]. Use -1 for no correction.
+% .nifti     = write Nifti image to FSL subdirectory [true]
 %
 % RETURNS:
 % s      = reconstructed magnitude dataset
@@ -30,14 +31,13 @@ function [s,info,errmsg] = parxrecon(sdir,options)
 %          02/28/2004 JMT Add options
 %          03/22/2004 JMT Add FID filter
 %          01/17/2006 JMT M-Lint corrections
+%          2015-04-06 JMT Add optional Nifti output
 %
-% Copyright 2000-2006 California Institute of Technology.
+% Copyright 2000-2015 California Institute of Technology.
 % All rights reserved.
 
 % Internal flags
-verbose = 0;
-
-if verbose; fprintf('Entering PARXRECON\n'); end
+verbose = true;
 
 % Initialize the options structure if absent
 if nargin < 2; options.filttype = 'none'; end
@@ -49,7 +49,10 @@ if ~isfield(options,'fw');       options.fw = 0.01;         end
 if ~isfield(options,'zpad');     options.zpad = 1;          end
 if ~isfield(options,'fidw');     options.fidw = 0;          end
 if ~isfield(options,'imtype');   options.imtype = 'm';      end
-if ~isfield(options,'zip');      options.zip = [-1 -1 -1];   end
+if ~isfield(options,'zip');      options.zip = [-1 -1 -1];  end
+if ~isfield(options,'nifti');    options.nifti = 'true';    end
+
+if verbose; fprintf('START PARXRECON\n'); end
 
 % Initialize return matrix
 s = [];
@@ -154,8 +157,9 @@ switch info.uflare_echopath
       if verbose; fprintf('  FID filtering: width %f\n', options.fidw); end
     
       % Construct FID filter for read dimension only
-      % Fermi filter is asymmetric and has a radius = (1-fidw)/2
-      Hfid = fermi(nx, 0.5-options.fidw*5, options.fidw, 'lower');
+      % Fermi filter is asymmetric. Radius set empirically
+      Hfid = fermi(nx, 0.5-options.fidw*5, options.fidw);
+      Hfid = flip(Hfid,1);
       Hfid = repmat(Hfid(:), [1 ny nz]);
 
       % Apply filter
@@ -241,16 +245,18 @@ switch info.uflare_echopath
     zipy = options.zip(2);
     zipz = options.zip(3);
     if zipx > 0
-      fprintf('Correcting x zipper at plane %d\n', zipx);
-      s(zipx,:,:) = 0; %(s(zipx-1,:,:) + s(zipx+1,:,:))/2;
+      fprintf('  Correcting x zipper at plane %d\n', zipx);
+      sA = s(zipx-2,:,:);
+      sB = s(zipx+2,:,:);
+      s((zipx-1):(zipx+1),:,:) = cat(1, sA * 0.75 + sB * 0.25, sA * 0.5 + sB * 0.5, sA * 0.25 + sB * 0.75);
     end
     if zipy > 0
-      fprintf('Correcting y zipper at plane %d\n', zipy);
-      s(:,zipy,:) = 0; %(s(:,zipy-1,:) + s(:,zipy+1,:))/2;
+      fprintf('  Correcting y zipper at plane %d\n', zipy);
+      s(:,zipy,:) = (s(:,zipy-1,:) + s(:,zipy+1,:))/2;
     end
     if zipz > 0
-      fprintf('Correcting z zipper at plane %d\n', zipz);
-      s(:,:,zipz) = 0; %(s(:,:,zipz-1) + s(:,:,zipz+1))/2;
+      fprintf('  Correcting z zipper at plane %d\n', zipz);
+      s(:,:,zipz) = (s(:,:,zipz-1) + s(:,:,zipz+1))/2;
     end
     
   case 'Displaced'
@@ -303,4 +309,30 @@ if info.nechoes > 1 && info.ndim == 2
   s = permute(s,[1 2 4 3]);
 end
 
-if verbose; fprintf('Leaving PARXRECON\n'); end
+% Optional Nifti output
+if options.nifti
+  
+  % Parse paravision directory name
+  [dcontain, dname, ~] = fileparts(sdir);
+  
+  % Create output directory if necessary
+  outdir = fullfile(dcontain, 'FSL');
+  warning('off','MATLAB:MKDIR:DirectoryExists');
+  mkdir(outdir);
+  warning('on','MATLAB:MKDIR:DirectoryExists');
+    
+  % Output Nifti filename
+  fname = fullfile(outdir, [dname '.nii.gz']);
+  
+  % Write Nifti file
+  if verbose; fprintf('  Saving image to %s\n', fname); end
+  cit_save_nii(fname, s, info.vsize);
+  
+  % Save full recon options structure
+  if verbose; fprintf('  Saving recon options to %s\n', fname); end
+  matfile = fullfile(outdir, [dname '_recon.mat']);
+  save(matfile, 'options');
+  
+end
+
+if verbose; fprintf('END PARXRECON\n'); end

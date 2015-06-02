@@ -9,7 +9,8 @@ function psqplotwaveforms(t,B1t,Gx,Gy,Gz,kx,ky,kz)
 %
 % AUTHOR : Mike Tyszka, Ph.D.
 % PLACE  : Caltech BIC
-% DATES  : 04/27/2004 JMT Extract from psq.m (JMT)
+% DATES  : 04/27/2004 JMT Extract from psq.m
+%          2015-04-05 JMT Update figure titling
 %
 % Copyright 2004 California Institute of Technology.
 % All rights reserved.
@@ -27,7 +28,9 @@ if nrows < 1
 end
 
 % Setup the results figure window
-figure(1); clf; set(gcf, 'Color', 'w');
+figure(10); clf;
+set(gcf, 'Color', 'w');
+set(gcf, 'NumberTitle', 'off');
 
 % Convert from s to ms and T/m to G/cm
 t_ms = t * 1e3;

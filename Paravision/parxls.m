@@ -48,6 +48,6 @@ for sc = 1:length(scanlist)
     % Print a formated line for this scan
     parxdump(info);
       
-  end
+  end  
   
 end

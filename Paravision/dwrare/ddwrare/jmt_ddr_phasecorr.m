@@ -1,19 +1,29 @@
-function k_corr = jmt_ddr_phasecorr(k,method,info,phi_0,debug)
+function [k_corr, dphi_y, dphi_y_est] = jmt_ddr_phasecorr(k, method, info, phi_0, debug)
 % Phase correct DWI k-space using S(0) k-space phase.
 %
 % SYNTAX: k_corr = jmt_ddr_phasecorr(k,method,info,phi_0,debug)
 %
 % ARGS:
 % k = 3D complex k-space to be corrected
-% method = phase correction method 'none','simple','median'
+% method = phase correction method:
+%   'none'     : no correction applied (debugging)
+%   'simple'   : estimate from full k-space
+%   'reduced'  : estimate from central k-space
+%   'unwrapped': estimate from central k-space with phase unwrapping
 % info = information structure for DWI
 % phi_0 = reference phase for simple correction
+%
+% RETURNS:
+% k_corr     = phase corrected complex k-space
+% dphi_y     = raw per-echo phase difference from reference
+% dphi_y_est = estimated per-echo phase correction 
 %
 % AUTHOR: Mike Tyszka, Ph.D.
 % PLACE: Caltech
 % DATES: 09/11/2007 JMT From scratch
+%        2015-04-05 JMT Update to return per-echo phase vectors
 %
-% Copyright 2007 California Institute of Technology.
+% Copyright 2007-2015 California Institute of Technology.
 % All rights reserved.
 
 fprintf('Phase correction : %s\n', method);
@@ -105,10 +115,10 @@ switch lower(method)
   case 'unwrapped'
     
     % Estimate the phase offset of each echo and the replication across ky
-    [dphi_echo_est,dphi_y_est] = jmt_ddr_echo_phase_est(dphi,nshots,etl,debug);
+    [~, dphi_y_est] = jmt_ddr_echo_phase_est(dphi, nshots, etl, debug);
     
     % Replicate dphi_y_est back to full k-space to use as a correction
-    phi_corr = repmat(dphi_y_est,[nx 1 nz]);
+    phi_corr = repmat(dphi_y_est, [nx 1 nz]);
     
   otherwise
     
@@ -118,4 +128,4 @@ switch lower(method)
 end
 
 % Apply phase correction to k-space
-k_corr = exp(-i * phi_corr) .* k;
+k_corr = exp(-1i * phi_corr) .* k;

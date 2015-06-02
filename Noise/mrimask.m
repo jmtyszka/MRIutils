@@ -7,9 +7,10 @@ function [mask, s_mask] = mrimask(s)
 % minimum above the noise peak in the intensity histogram
 %
 % AUTHOR : Mike Tyszka, Ph.D.
+% PLACE  : Caltech
 % DATES  : 09/19/2007 JMT From scratch
 %          03/20/2014 JMT Update comments
-% PLACE  : Caltech
+%          2015-03-27 JMT Cast mask to doubles before return
 %
 % This file is part of MRIutils.
 %
@@ -26,7 +27,7 @@ function [mask, s_mask] = mrimask(s)
 %     You should have received a copy of the GNU General Public License
 %     along with MRIutils.  If not, see <http://www.gnu.org/licenses/>.
 %
-% Copyright 2007,2013 California Institute of Technology.
+% Copyright 2007-2015 California Institute of Technology.
 
 % Debug flag for verbose output
 debug = 0;
@@ -60,7 +61,7 @@ zeros_plus = find(dn(1:(nbin-2)) < 0.0 & dn(2:(nbin-1)) > 0.0);
 x_thresh = x(zeros_plus(1)+1);
 
 % Create intensity mask and apply to image
-mask = s > x_thresh;
+mask = double(s > x_thresh);
 s_mask = s .* mask;
 
 if debug

@@ -20,7 +20,7 @@ function nii_names = pv2fsl(studydir,scans)
 % All rights reserved.
 
 version = 1.3;
-mat_arch = 'R2014b';
+mat_arch = 'R2015a';
 
 if nargin < 1; studydir = pwd; end
 if nargin < 2; scans = 1; end
@@ -74,16 +74,13 @@ for sc = 1:nscans
       
       %% Data output
       
-      % Setup Nifti rotation matrices with voxel size on diagonal
-      vsize = ones(1,4);
-      vsize(1:3) = info.vsize(1:3)/1000.0; % um -> mm for Nifti-1
-      nii_mat = diag(vsize);
-      nii_mat0 = nii_mat;
+      % Voxel dimensions
+      vsize = info.vsize(1:3)/1000.0; % um -> mm for Nifti-1
       
       % Flip sign of A11 element of matrices
       % This forces radiological convention for non-oblique datasets
-      nii_mat(1,1) = -nii_mat(1,1);
-      nii_mat0(1,1) = -nii_mat0(1,1);
+      % nii_mat(1,1) = -nii_mat(1,1);
+      % nii_mat0(1,1) = -nii_mat0(1,1);
       
       % Construct Nifti volume name
       t_string = datestr(info.time,30);
@@ -92,7 +89,8 @@ for sc = 1:nscans
       
       % Save compressed Nifti-1 image volume
       fprintf('Saving %s\n', nii_name);
-      save_nii(nii_path,s,'FLOAT32-LE',nii_mat,nii_mat0);
+      nii = make_nii(s, vsize);
+      save_nii(nii, nii_path);
       
       % Add output file name to list
       nii_names{sc} = nii_path;

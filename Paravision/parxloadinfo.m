@@ -56,7 +56,6 @@ subjfile = fullfile(serdir,'..','subject');
 if ~exist(subjfile,'file')
   status = -3;
   errmsg = 'No subject file\n';
-  return
 end
 
 % Check for existence of reco file

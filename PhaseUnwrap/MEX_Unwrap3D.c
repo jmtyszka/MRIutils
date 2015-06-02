@@ -32,7 +32,6 @@
 #define MAG_MAT      prhs[1]
 #define MAGTH_MAT    prhs[2]
 
-#define M_PI 3.1415926536
 #define TWO_PI (2.0 * M_PI)
 
 #define LOC3D(x,y,z) ((x) + nx * ((y) + ny * (z)))

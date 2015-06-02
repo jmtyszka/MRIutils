@@ -22,8 +22,8 @@ if nargin < 1, n = 128; end
 if nargin < 2, fr = 0.5; end
 if nargin < 3, fw = 0.05; end
 
-% Construct a normalized coordinate
-x = linspace(0,1,n);
+% Construct a normalized coordinate vector [-0.5, 0.5]
+x = linspace(-0.5,0.5,n);
 
 % Construct 1D Fermi filter vector
 H = 1 ./ (1 + exp((x - fr)/fw));

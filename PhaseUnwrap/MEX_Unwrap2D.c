@@ -27,7 +27,6 @@
 #define MAG_MAT      prhs[1]
 #define MAGTH_MAT    prhs[2]
 
-#define M_PI 3.1415926536
 #define TWO_PI (2.0 * M_PI)
 
 #define LOC2D(x,y) ((x) + nx * (y))
@@ -75,6 +74,11 @@ static void find_seed(int *,
 		      int *,
 		      int *,
 		      int, int);
+
+int seed_ambiguity(int,
+		   double *,
+		   int *,
+		   int, int);
 
 /************************************************************
  * MAIN ENTRY POINT TO MEX_Unwrap2D()

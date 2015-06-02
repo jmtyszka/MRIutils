@@ -9,14 +9,13 @@ function [k_corr, x_optim, optres] = rare_phaseoptim2(k, ky_order, corr_type)
 %
 % ARGS:
 % k = complex k-space acquired using a RARE sequence
-% outside = spatial outside mask for ghost detection and minimization
 % ky_order = original ky line index order (nshots x etl)
 % corr_type = 'phase' or 'complex' per-echo correction
 %
 % RETURNS:
-% k_corr = k-space corrected by optimized phase
-% dphi_echo_optim = optimized per-echo phase correction (1 x etl)
-% optres = detailed optimization results
+% k_corr  = k-space corrected by optimized phase
+% x_optim = optimized parameters
+% optres  = detailed optimization results
 %
 % AUTHOR : Mike Tyszka, Ph.D.
 % PLACE  : Caltech
@@ -30,7 +29,7 @@ if nargin < 3; type = 'phase'; end
 
 % Optimization options
 options = optimset('lsqnonlin');
-options.Display = 'iter';
+options.Display = 'none';
 
 % Determine echo train length from ky_order matrix
 etl = size(ky_order,2);
@@ -86,10 +85,10 @@ end
 
 % Optimize phase corrections
 fprintf('Optimizing with estimated initial phases\n');
-[x_optim,resnorm_est,residual,exitflag,output_est] = ...
+[x_optim,resnorm_est,~,~,output_est] = ...
   lsqnonlin('rare_phaseoptim2_costfn',...
   x_est, x_lb, x_ub,...
-  options,pars);
+  options, pars);
 
 % Record optimization results
 optres.resnorm_raw = resnorm_raw;
@@ -98,4 +97,4 @@ optres.iters_est = output_est.iterations;
 
 % Apply optimized phase correction
 pars.k = k;
-k_corr = rare_apply_echo_corr(x_optim,pars);
+k_corr = rare_apply_echo_corr(x_optim, pars);

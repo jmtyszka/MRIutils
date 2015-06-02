@@ -1,4 +1,4 @@
-function [dphi_echo_est,dphi_y_est,dphi_y] = rare_echo_phase_est(dphi,ky_order)
+function [dphi_echo_est, dphi_y_est, dphi_y] = rare_echo_phase_est(dphi, ky_order)
 % [dphi_echo_est,dphi_y_est,dphi_y] = rare_echo_phase_est(dphi,ky_order)
 %
 % ARGS:
@@ -18,7 +18,7 @@ function [dphi_echo_est,dphi_y_est,dphi_y] = rare_echo_phase_est(dphi,ky_order)
 % All rights reserved.
 
 % Extract number of echoes and shots from ky_order
-[nshots,etl] = size(ky_order);
+[~, etl] = size(ky_order);
 
 % Check data dimensions - should be 2 or 3
 nd = ndims(dphi);
