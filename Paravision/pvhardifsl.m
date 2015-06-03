@@ -17,13 +17,16 @@ function pvhardifsl(study_dir,hardi_scans,gaussfr,samp_type)
 %                         - Eliminate all but gauss filter
 %                         - Eliminate Analyze intermediates
 %          10/06/2007 JMT Correct vsize error and dtifit order
-%          2015-03-26 JMT Update for latest jmt_dr data
+%          2015-03-26 JMT Update for latest data
 %
 % Copyright 2006-2015 California Institute of Technology.
 % All rights reserved.
 
-version = 1.1;
-mat_arch = 'R2014b';
+version = 1.2;
+mat_arch = 'R2015a';
+
+% Eddy current correction flag
+do_eddy = false;
 
 % Splash text
 fprintf('\n');
@@ -190,58 +193,62 @@ for dc = 1:nhardi
 
 end
 
-% Normalize 4D HARDI data volume
-fprintf(fd_log,'Normalizing HARDI intensity range\n');
+% Normalize intensity of 4D HARDI volume
+fprintf('Normalizing HARDI intensity\n');
 s_4d = s_4d / max(s_4d(:));
-
-%% Data output
-
-fprintf(fd_log,'Writing HARDI data to FSL directory\n');
-
-fsl_dir = fullfile(study_dir,'FSL');
-if ~exist(fsl_dir,'dir');
-  fprintf(fd_log,'Creating FSL directory\n');
-  mkdir(fsl_dir);
-end
-
-% Write bvals and bvecs text files to FSL directory
-fslb(fsl_dir,bvals,bvecs);
-
-% Correct vsize for offline recon (no zeropadding)
-info.vsize = info.fov ./ info.sampdim * 1e3; % m -> mm
-
-% Setup Nifti rotation matrices with voxel size on diagonal
-vsize = ones(1,4);
-vsize(1:3) = info.vsize(1:3)/1000.0; % um -> mm for Nifti-1
-nii_mat = diag(vsize);
-nii_mat0 = nii_mat;
-
-% Flip sign of A11 element of matrices
-% This forces radiological convention for non-oblique datasets
-nii_mat(1,1) = -nii_mat(1,1);
-nii_mat0(1,1) = -nii_mat0(1,1);
-
-% Save DWI image volume
-save_nii(fullfile(fsl_dir,'hardi.nii.gz'),s_4d,'FLOAT32-LE',nii_mat,nii_mat0);
-
-% Change to FSL directory
-cwd = pwd;
-cd(fsl_dir);
-
-% FSL FDT eddy current distortion correction
-fprintf(fd_log,'FSL eddy current correction\n');
-!/usr/local/fsl/bin/eddy_correct hardi data 0
-
-% Reload eddy corrected data
-fprintf(fd_log,'Reload DWIs\n');
-s_4d = load_nii(fullfile(fsl_dir,'data.nii.gz'));
 
 % Create index masks for S(0) and DWI images
 % Assume S(0) volumes have b < bmax/10
-fprintf(fd_log,'Identifying S(0) and DWI volumes\n');
+fprintf('Identifying S(0) and DWI volumes\n');
 bmax = max(bvals(:));
 s0_inds = (bvals < bmax * 0.1);
 dwi_inds = ~s0_inds;
+
+%% Data output
+
+fprintf('Writing HARDI data to directory\n');
+
+hardi_dir = fullfile(study_dir,'HARDI');
+if ~exist(hardi_dir,'dir');
+  fprintf('Creating HARDI directory\n');
+  mkdir(hardi_dir);
+end
+
+% Write bvals and bvecs text files to HARDI directory
+fprintf('Writing b values and vectors to HARDI directory\n');
+fslb(hardi_dir,bvals,bvecs);
+
+% Use FOV and sampled matrix size to calculate reconstructed vsize
+vsize = info.fov(1:3) ./ info.sampdim(1:3); % in mm for Nifti-1
+
+% Save DWI image volume
+fprintf('Saving enormous 4D HARDI image\n');
+hardi_name = fullfile(hardi_dir,'hardi.nii.gz');
+cit_save_nii(hardi_name, s_4d, vsize);
+fprintf('Finished\n');
+
+% Change to FSL directory
+cwd = pwd;
+cd(hardi_dir);
+
+% FSL FDT eddy current distortion correction
+if do_eddy
+  
+  fprintf('Starting FSL eddy current correction\n');
+  !eddy_correct hardi data 0
+  
+  % Reload eddy corrected data
+  fprintf('Reload DWIs\n');
+  data_name = fullfile(hardi_dir,'data.nii.gz');
+  nii = load_nii(data_name);
+  s_4d = nii.img;
+
+else
+  
+  fprintf('Skipping eddy current correction\n');
+  !imcp hardi data
+
+end
 
 %% Auxilliary volumes
 % Ouput idwi, nodif and nodif_brain_mask
@@ -252,40 +259,47 @@ nodif = mean(s_4d(:,:,:,s0_inds),4);
 
 % Use sample-specific mask generation
 % Use iDWI - better identification of restricted diffusion areas
+
 fprintf(fd_log,'Generating brain mask\n');
+
 switch lower(samp_type)
+  
   case {'rodent_brain','primate_brain'}
     fprintf(fd_log,'  Using noise threshold\n');
     nodif_brain_mask = mrimask(idwi);
+  
   case {'rodent_head'}
     fprintf(fd_log,'  Using morphological mask\n');
-    [nodif_brain,nodif_brain_mask] = skullstrip(idwi);
+    [~, nodif_brain_mask] = skullstrip(idwi);
+  
   otherwise
     fprintf(fd_log,'  Using Otsu mask\n');
-    % Otsu threshold
     idwin = idwi / max(idwi(:));
     th = graythresh(idwin);
     nodif_brain_mask = idwin > th;
+
 end
 
 % Save auxilliary volumes
-fprintf(fd_log,'Writing iDWI\n');
-save_nii(fullfile(fsl_dir,'idwi.nii.gz'),idwi,'FLOAT32-LE',nii_mat,nii_mat0);
-fprintf(fd_log,'Writing nodif\n');
-save_nii(fullfile(fsl_dir,'nodif.nii.gz'),nodif,'FLOAT32-LE',nii_mat,nii_mat0);
-fprintf(fd_log,'Writing nodif_brain_mask\n');
-save_nii(fullfile(fsl_dir,'nodif_brain_mask.nii.gz'),nodif_brain_mask,'FLOAT32-LE',nii_mat,nii_mat0);
+fprintf('Writing iDWI\n');
+idwi_name = fullfile(hardi_dir,'idwi.nii.gz');
+cit_save_nii(idwi_name, idwi, vsize);
+
+fprintf('Writing nodif\n');
+nodif_name = fullfile(hardi_dir,'nodif.nii.gz');
+cit_save_nii(nodif_name, nodif, vsize);
+
+fprintf('Writing nodif_brain_mask\n');
+nodif_brain_mask_name = fullfile(hardi_dir,'nodif_brain_mask.nii.gz');
+cit_save_nii(nodif_brain_mask_name, uint8(nodif_brain_mask), vsize);
 
 % FSL FDT tensor fitting
-fprintf(fd_log,'FSL dtifit\n');
-!/usr/local/fsl/bin/dtifit --data=data --out=dti --mask=nodif_brain_mask --bvecs=bvecs --bvals=bvals
+fprintf('FSL dtifit\n');
+!dtifit -k data -o dti -m nodif_brain_mask.nii.gz -r bvecs -b bvals -V
 
 % Return to current directory
 cd(cwd);
 
-fprintf(fd_log,'**********\n');
-fprintf(fd_log,'Recon completed : %s\n',datestr(now));
-fprintf(fd_log,'**********\n');
-
-% Close log
-fclose(fd_log);
+fprintf('**********\n');
+fprintf('Recon completed : %s\n',datestr(now));
+fprintf('**********\n');

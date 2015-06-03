@@ -371,8 +371,8 @@ if ~exist(hardi_dir,'dir');
   mkdir(hardi_dir);
 end
 
-% Write bvals and bvecs text files to FSL directory
-fprintf('Writing b values and vectors to FSL directory\n');
+% Write bvals and bvecs text files to HARDI directory
+fprintf('Writing b values and vectors to HARDI directory\n');
 fslb(hardi_dir,bvals,bvecs);
 
 % Use FOV and sampled matrix size to calculate reconstructed vsize
