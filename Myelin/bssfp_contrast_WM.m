@@ -1,5 +1,7 @@
-function M_bssfp = bssfp_contrast(f_F, f_S, T1_F, T1_S, T2_F, T2_S, k_FS, k_SF, rho, TR, alpha_deg)
-% bSSFP contrast equation for two-compartment (fast, slow relaxing) tissue
+function M_bssfp = bssfp_contrast_WM(f_F, f_S, T1_F, T1_S, T2_F, T2_S, k_FS, k_SF, rho, TR, alpha_deg)
+% bSSFP contrast equation for white matter
+%
+% Treat WM as a two-compartment (fast, slow relaxing) tissue
 %
 % ARGS:
 % f_F, f_S   : fast and slow compartment volume fractions [0..1]
