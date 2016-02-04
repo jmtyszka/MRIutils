@@ -59,7 +59,7 @@ for ac = 1:length(theta_x)
   if s > 0
     u = u/s;
   else
-    warning('A close to identity, arbitrary result');
+    % warning('A close to identity, arbitrary result');
     u = [1, 0, 0];
   end
   
