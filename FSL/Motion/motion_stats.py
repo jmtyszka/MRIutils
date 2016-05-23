@@ -71,7 +71,12 @@ def main():
         print('*** Could not load motion data from file')
         sys.exit(1)
 
-    print(M.shape)
+    theta_x, theta_y, theta_z = M[:,0], M[:,1], M[:,2]
+    theta_total = total_rotation(theta_x, theta_y, theta_z)
+
+    mean_FF_rotation = np.mean(theta_total)
+
+    print(mean_FF_rotation)
 
 
 def total_rotation(theta_x, theta_y, theta_z):
@@ -127,6 +132,8 @@ def total_rotation(theta_x, theta_y, theta_z):
 
         # Save axis result
         axis_total[i,:] = u
+
+    return axis_total
 
 
 # This is the standard boilerplate that calls the main() function.
