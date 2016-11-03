@@ -12,6 +12,7 @@ function parxdump(info)
 % PLACE  : Caltech BIC
 % DATES  : 04/26/2001 From scratch
 %          01/17/2006 JMT M-Lint corrections
+%          2016-08-24 JMT Added voxel dimensions
 %
 % Copyright 2001-2006 California Institute of Technology.
 % All rights reserved.
@@ -36,29 +37,42 @@ end
 switch ndim
 case 0
 case 1
-  fprintf('%d ', info.dim(1));
+  fprintf('%d | ', info.dim(1));
 otherwise
   for d = 1:(ndim-1)
     fprintf('%dx', info.dim(d));
   end
-  fprintf('%d ', info.dim(ndim));
+  fprintf('%d | ', info.dim(ndim));
 end
 
 % FOV size
 switch ndim
 case 0
 case 1
-  fprintf('%0.1f ', info.fov(1));
+  fprintf('%0.1f | ', info.fov(1));
 otherwise
   for d = 1:(ndim-1)
     fprintf('%0.1fx', info.fov(d));
   end
-  fprintf('%0.1f ', info.fov(ndim));
+  fprintf('%0.1f | ', info.fov(ndim));
+end
+
+% Voxel size
+switch ndim
+case 0
+case 1
+  fprintf('%0.1f | ', info.fov(1) / info.dim(1));
+otherwise
+  for d = 1:(ndim-1)
+    fprintf('%0.1fx', info.fov(d) / info.dim(d));
+  end
+  fprintf('%0.1f | ', info.fov(ndim) / info.dim(ndim));
 end
 
 % b factor is present
 if isfield(info,'bfactor')
   fprintf('%0.1f ',info.bfactor);
+  fprintf('(%0.1f)',sum(info.bfactor));
 end
 
 fprintf('\n');
