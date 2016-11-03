@@ -1,0 +1,1250 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Workspace
+   version = "1.0">
+   <Group
+      location = "group:Colormaps"
+      name = "Colormaps">
+      <FileRef
+         location = "group:cold.m">
+      </FileRef>
+      <FileRef
+         location = "group:colorize.m">
+      </FileRef>
+      <FileRef
+         location = "group:colorize3d.m">
+      </FileRef>
+      <FileRef
+         location = "group:colorscaleim.m">
+      </FileRef>
+      <FileRef
+         location = "group:composite.m">
+      </FileRef>
+      <FileRef
+         location = "group:flame.m">
+      </FileRef>
+      <FileRef
+         location = "group:hotmetal.m">
+      </FileRef>
+      <FileRef
+         location = "group:redblue.m">
+      </FileRef>
+      <FileRef
+         location = "group:twoway.m">
+      </FileRef>
+   </Group>
+   <Group
+      location = "group:Figures"
+      name = "Figures">
+      <FileRef
+         location = "group:circle.m">
+      </FileRef>
+      <FileRef
+         location = "group:circleseg.m">
+      </FileRef>
+      <FileRef
+         location = "group:edgeoverlay.m">
+      </FileRef>
+      <FileRef
+         location = "group:fspace.m">
+      </FileRef>
+      <FileRef
+         location = "group:montagegray.m">
+      </FileRef>
+      <FileRef
+         location = "group:montagergb.m">
+      </FileRef>
+      <FileRef
+         location = "group:overlayrgb.m">
+      </FileRef>
+      <FileRef
+         location = "group:roigui.m">
+      </FileRef>
+      <FileRef
+         location = "group:roirect.m">
+      </FileRef>
+      <FileRef
+         location = "group:threeplane.m">
+      </FileRef>
+      <FileRef
+         location = "group:threeplanemont.m">
+      </FileRef>
+      <FileRef
+         location = "group:xray.m">
+      </FileRef>
+   </Group>
+   <Group
+      location = "group:Filters"
+      name = "Filters">
+      <FileRef
+         location = "group:Contents.m">
+      </FileRef>
+      <FileRef
+         location = "group:csihamming2d.m">
+      </FileRef>
+      <FileRef
+         location = "group:fermi.m">
+      </FileRef>
+      <FileRef
+         location = "group:fermi2.m">
+      </FileRef>
+      <FileRef
+         location = "group:fermi3.m">
+      </FileRef>
+      <FileRef
+         location = "group:gauss.m">
+      </FileRef>
+      <FileRef
+         location = "group:gauss2.m">
+      </FileRef>
+      <FileRef
+         location = "group:gauss3.m">
+      </FileRef>
+      <FileRef
+         location = "group:gauss3psf.m">
+      </FileRef>
+      <FileRef
+         location = "group:gauss_coeff.m">
+      </FileRef>
+      <FileRef
+         location = "group:gaussfilt2.m">
+      </FileRef>
+      <FileRef
+         location = "group:gaussfilt3.m">
+      </FileRef>
+      <FileRef
+         location = "group:gaussfilter.m">
+      </FileRef>
+      <FileRef
+         location = "group:Hamming.m">
+      </FileRef>
+      <FileRef
+         location = "group:hamming2.m">
+      </FileRef>
+      <FileRef
+         location = "group:hamming3.m">
+      </FileRef>
+      <FileRef
+         location = "group:HammingSinc.m">
+      </FileRef>
+      <FileRef
+         location = "group:hanning2.m">
+      </FileRef>
+      <FileRef
+         location = "group:hanning3.m">
+      </FileRef>
+      <FileRef
+         location = "group:hsinc.m">
+      </FileRef>
+      <FileRef
+         location = "group:lorentz2.m">
+      </FileRef>
+      <FileRef
+         location = "group:medfilt3.m">
+      </FileRef>
+      <FileRef
+         location = "group:medianfilt.m">
+      </FileRef>
+      <FileRef
+         location = "group:movmed.m">
+      </FileRef>
+   </Group>
+   <Group
+      location = "group:FSL"
+      name = "FSL">
+      <FileRef
+         location = "group:dchardifsl.m">
+      </FileRef>
+      <FileRef
+         location = "group:fsl2dt.m">
+      </FileRef>
+      <FileRef
+         location = "group:fsl2nrrd.m">
+      </FileRef>
+      <FileRef
+         location = "group:fslb.m">
+      </FileRef>
+      <FileRef
+         location = "group:fslgetextension.m">
+      </FileRef>
+      <FileRef
+         location = "group:fslloadbvec.m">
+      </FileRef>
+      <Group
+         location = "group:ICA_Cleanup"
+         name = "ICA_Cleanup">
+         <FileRef
+            location = "group:find_hifreq_ics.m">
+         </FileRef>
+         <FileRef
+            location = "group:find_motion_ics.m">
+         </FileRef>
+         <FileRef
+            location = "group:find_nyquist_ics.m">
+         </FileRef>
+         <FileRef
+            location = "group:find_slicebg_ics.m">
+         </FileRef>
+         <FileRef
+            location = "group:find_zmotion_ics.m">
+         </FileRef>
+         <FileRef
+            location = "group:ica_cleanup.m">
+         </FileRef>
+         <FileRef
+            location = "group:ica_cleanup_options.m">
+         </FileRef>
+         <FileRef
+            location = "group:load_ic_smodes.m">
+         </FileRef>
+         <FileRef
+            location = "group:load_ic_tmodes.m">
+         </FileRef>
+         <FileRef
+            location = "group:load_moco_pars.m">
+         </FileRef>
+         <FileRef
+            location = "group:melodic_stats.m">
+         </FileRef>
+      </Group>
+      <Group
+         location = "group:Motion"
+         name = "Motion">
+         <FileRef
+            location = "group:motion_analysis.m">
+         </FileRef>
+         <FileRef
+            location = "group:total_rotation.m">
+         </FileRef>
+      </Group>
+   </Group>
+   <Group
+      location = "group:Functions"
+      name = "Functions">
+      <FileRef
+         location = "group:autocrop.m">
+      </FileRef>
+      <FileRef
+         location = "group:autocrop3.m">
+      </FileRef>
+      <FileRef
+         location = "group:avgdown3.m">
+      </FileRef>
+      <FileRef
+         location = "group:clamp.m">
+      </FileRef>
+      <FileRef
+         location = "group:ftdown3.m">
+      </FileRef>
+      <FileRef
+         location = "group:ftdown4d.m">
+      </FileRef>
+      <FileRef
+         location = "group:ftresize3.m">
+      </FileRef>
+      <FileRef
+         location = "group:GAMMA_1H.m">
+      </FileRef>
+      <FileRef
+         location = "group:hms.m">
+      </FileRef>
+      <FileRef
+         location = "group:impad.m">
+      </FileRef>
+      <FileRef
+         location = "group:mediandown3.m">
+      </FileRef>
+      <FileRef
+         location = "group:medianqt.m">
+      </FileRef>
+      <FileRef
+         location = "group:moment3.m">
+      </FileRef>
+      <FileRef
+         location = "group:orthoslices.m">
+      </FileRef>
+      <FileRef
+         location = "group:padstring.m">
+      </FileRef>
+      <FileRef
+         location = "group:robustrange.m">
+      </FileRef>
+      <FileRef
+         location = "group:robustscale.m">
+      </FileRef>
+      <FileRef
+         location = "group:roistats.m">
+      </FileRef>
+      <FileRef
+         location = "group:shortname.m">
+      </FileRef>
+      <FileRef
+         location = "group:voxelgrid.m">
+      </FileRef>
+      <FileRef
+         location = "group:voxelgrid2.m">
+      </FileRef>
+   </Group>
+   <Group
+      location = "group:IO"
+      name = "IO">
+      <Group
+         location = "group:Misc"
+         name = "Misc">
+         <FileRef
+            location = "group:aviwrite.m">
+         </FileRef>
+         <FileRef
+            location = "group:imwritesc.m">
+         </FileRef>
+      </Group>
+      <Group
+         location = "group:Philips"
+         name = "Philips">
+         <FileRef
+            location = "group:loadspar.m">
+         </FileRef>
+         <FileRef
+            location = "group:sparnum.m">
+         </FileRef>
+         <FileRef
+            location = "group:sparstr.m">
+         </FileRef>
+      </Group>
+      <Group
+         location = "group:Siemens"
+         name = "Siemens">
+         <Group
+            location = "group:MPCU"
+            name = "MPCU">
+            <FileRef
+               location = "group:mpcu.m">
+            </FileRef>
+            <FileRef
+               location = "group:mpcu_parse.m">
+            </FileRef>
+            <FileRef
+               location = "group:mpcu_parseJD.m">
+            </FileRef>
+         </Group>
+         <Group
+            location = "group:RDA"
+            name = "RDA">
+            <FileRef
+               location = "group:read_rda.m">
+            </FileRef>
+         </Group>
+      </Group>
+      <Group
+         location = "group:Stacks"
+         name = "Stacks">
+         <FileRef
+            location = "group:amirastack.m">
+         </FileRef>
+         <FileRef
+            location = "group:imreadbytestack.m">
+         </FileRef>
+         <FileRef
+            location = "group:imreadstack.m">
+         </FileRef>
+         <FileRef
+            location = "group:imwritestack.m">
+         </FileRef>
+         <FileRef
+            location = "group:pngstack.m">
+         </FileRef>
+         <FileRef
+            location = "group:pngstackrgb.m">
+         </FileRef>
+         <FileRef
+            location = "group:tiffstack.m">
+         </FileRef>
+      </Group>
+   </Group>
+   <FileRef
+      location = "group:LICENSE.md">
+   </FileRef>
+   <Group
+      location = "group:MRS"
+      name = "MRS">
+      <FileRef
+         location = "group:Contents.m">
+      </FileRef>
+      <FileRef
+         location = "group:csilinebroaden2.m">
+      </FileRef>
+      <FileRef
+         location = "group:csilorentz2gauss2.m">
+      </FileRef>
+      <FileRef
+         location = "group:exp_tfilter.m">
+      </FileRef>
+      <FileRef
+         location = "group:gauss_tfilter.m">
+      </FileRef>
+      <FileRef
+         location = "group:HammingLB.m">
+      </FileRef>
+      <FileRef
+         location = "group:linebroaden.m">
+      </FileRef>
+      <FileRef
+         location = "group:mrsplot.m">
+      </FileRef>
+      <FileRef
+         location = "group:mrsreswater.m">
+      </FileRef>
+      <FileRef
+         location = "group:mrsview.m">
+      </FileRef>
+      <Group
+         location = "group:Voigt"
+         name = "Voigt">
+         <FileRef
+            location = "group:cerf.m">
+         </FileRef>
+         <FileRef
+            location = "group:cerf1.m">
+         </FileRef>
+         <FileRef
+            location = "group:cerf2.m">
+         </FileRef>
+         <FileRef
+            location = "group:cerf3.m">
+         </FileRef>
+         <FileRef
+            location = "group:cerf4.m">
+         </FileRef>
+         <FileRef
+            location = "group:Cmath.c">
+         </FileRef>
+         <FileRef
+            location = "group:CMATH.H">
+         </FileRef>
+         <FileRef
+            location = "group:Contents.m">
+         </FileRef>
+         <FileRef
+            location = "group:Humlicek.m">
+         </FileRef>
+         <FileRef
+            location = "group:humlicek_mex.c">
+         </FileRef>
+         <FileRef
+            location = "group:lsq_model.m">
+         </FileRef>
+         <FileRef
+            location = "group:model_demo.m">
+         </FileRef>
+         <FileRef
+            location = "group:model_f0.m">
+         </FileRef>
+         <FileRef
+            location = "group:model_fit.m">
+         </FileRef>
+         <FileRef
+            location = "group:model_mrs.m">
+         </FileRef>
+         <FileRef
+            location = "group:model_ppm.m">
+         </FileRef>
+         <FileRef
+            location = "group:mrs_noise.m">
+         </FileRef>
+         <FileRef
+            location = "group:refine_fit.m">
+         </FileRef>
+         <FileRef
+            location = "group:synth_base.m">
+         </FileRef>
+         <FileRef
+            location = "group:synth_demo.m">
+         </FileRef>
+         <FileRef
+            location = "group:synth_mrs.m">
+         </FileRef>
+         <FileRef
+            location = "group:voigt.m">
+         </FileRef>
+         <FileRef
+            location = "group:voigt_area.m">
+         </FileRef>
+         <FileRef
+            location = "group:voigt_demo.m">
+         </FileRef>
+         <FileRef
+            location = "group:voigt_fwhm.m">
+         </FileRef>
+         <FileRef
+            location = "group:voigt_fwhm_plot.m">
+         </FileRef>
+         <FileRef
+            location = "group:voigt_half.m">
+         </FileRef>
+         <FileRef
+            location = "group:voigt_mex.c">
+         </FileRef>
+         <FileRef
+            location = "group:voigt_real.m">
+         </FileRef>
+         <FileRef
+            location = "group:voigtcmp.m">
+         </FileRef>
+      </Group>
+   </Group>
+   <Group
+      location = "group:Myelin"
+      name = "Myelin">
+      <FileRef
+         location = "group:bssfp_contrast_WM.m">
+      </FileRef>
+      <FileRef
+         location = "group:fitvox_mc_t2star.m">
+      </FileRef>
+      <FileRef
+         location = "group:model_mc_t2star.m">
+      </FileRef>
+      <FileRef
+         location = "group:myelin.m">
+      </FileRef>
+      <FileRef
+         location = "group:myelin_t2star.m">
+      </FileRef>
+      <FileRef
+         location = "group:spgr_contrast.m">
+      </FileRef>
+   </Group>
+   <Group
+      location = "group:Noise"
+      name = "Noise">
+      <FileRef
+         location = "group:BOLD_SNR_Efficiency.png">
+      </FileRef>
+      <FileRef
+         location = "group:boldeff.m">
+      </FileRef>
+      <FileRef
+         location = "group:CoilNoiseRatio.m">
+      </FileRef>
+      <FileRef
+         location = "group:mrcontrast.m">
+      </FileRef>
+      <FileRef
+         location = "group:mrimask.m">
+      </FileRef>
+      <FileRef
+         location = "group:mrmad.m">
+      </FileRef>
+      <FileRef
+         location = "group:mrsnr.m">
+      </FileRef>
+      <FileRef
+         location = "group:noisenorm.m">
+      </FileRef>
+      <FileRef
+         location = "group:NoiseRatio.m">
+      </FileRef>
+      <FileRef
+         location = "group:noisesd.m">
+      </FileRef>
+      <FileRef
+         location = "group:sdn.m">
+      </FileRef>
+      <FileRef
+         location = "group:snr.m">
+      </FileRef>
+      <FileRef
+         location = "group:snrplot.m">
+      </FileRef>
+      <FileRef
+         location = "group:spinspervoxel.m">
+      </FileRef>
+      <FileRef
+         location = "group:WhichB0.m">
+      </FileRef>
+   </Group>
+   <Group
+      location = "group:Paravision"
+      name = "Paravision">
+      <FileRef
+         location = "group:b0map.m">
+      </FileRef>
+      <FileRef
+         location = "group:B1.m">
+      </FileRef>
+      <FileRef
+         location = "group:Contents.m">
+      </FileRef>
+      <Group
+         location = "group:dwrare"
+         name = "dwrare">
+         <Group
+            location = "group:ddwrare"
+            name = "ddwrare">
+            <FileRef
+               location = "group:jmt_ddr_costfn.m">
+            </FileRef>
+            <FileRef
+               location = "group:jmt_ddr_echo_phase_est.m">
+            </FileRef>
+            <FileRef
+               location = "group:jmt_ddr_findscans.m">
+            </FileRef>
+            <FileRef
+               location = "group:jmt_ddr_phasecorr.m">
+            </FileRef>
+            <FileRef
+               location = "group:jmt_ddr_phaseoptim.m">
+            </FileRef>
+            <FileRef
+               location = "group:jmt_ddr_phaseref.m">
+            </FileRef>
+            <FileRef
+               location = "group:jmt_ddr_recon.m">
+            </FileRef>
+         </Group>
+         <FileRef
+            location = "group:jmt_dr_hardi_recon.m">
+         </FileRef>
+         <FileRef
+            location = "group:jmt_dr_recon.m">
+         </FileRef>
+         <FileRef
+            location = "group:rare_apply_echo_corr.m">
+         </FileRef>
+         <FileRef
+            location = "group:rare_echo_phase_est.m">
+         </FileRef>
+         <FileRef
+            location = "group:rare_phaseoptim.m">
+         </FileRef>
+         <FileRef
+            location = "group:rare_phaseoptim2.m">
+         </FileRef>
+         <FileRef
+            location = "group:rare_phaseoptim2_costfn.m">
+         </FileRef>
+         <FileRef
+            location = "group:rare_phaseoptim_costfn.m">
+         </FileRef>
+      </Group>
+      <FileRef
+         location = "group:fispmip.m">
+      </FileRef>
+      <FileRef
+         location = "group:lastdir.m">
+      </FileRef>
+      <FileRef
+         location = "group:parx2an.m">
+      </FileRef>
+      <FileRef
+         location = "group:parx2fslfmap.m">
+      </FileRef>
+      <FileRef
+         location = "group:parx2tiff.m">
+      </FileRef>
+      <FileRef
+         location = "group:parxacqmeth.m">
+      </FileRef>
+      <FileRef
+         location = "group:parxacqtime.m">
+      </FileRef>
+      <FileRef
+         location = "group:parxdatenum.m">
+      </FileRef>
+      <FileRef
+         location = "group:parxdatestr.m">
+      </FileRef>
+      <FileRef
+         location = "group:parxdump.m">
+      </FileRef>
+      <FileRef
+         location = "group:parxextractdouble.m">
+      </FileRef>
+      <FileRef
+         location = "group:parxextractmatrix.m">
+      </FileRef>
+      <FileRef
+         location = "group:parxextractstring.m">
+      </FileRef>
+      <FileRef
+         location = "group:parxextractstring2.m">
+      </FileRef>
+      <FileRef
+         location = "group:parxextractyesno.m">
+      </FileRef>
+      <FileRef
+         location = "group:parxfilm.m">
+      </FileRef>
+      <FileRef
+         location = "group:parxfindseries.m">
+      </FileRef>
+      <FileRef
+         location = "group:parxfindstudies.m">
+      </FileRef>
+      <FileRef
+         location = "group:parxindex.m">
+      </FileRef>
+      <FileRef
+         location = "group:parxload2dseq.m">
+      </FileRef>
+      <FileRef
+         location = "group:parxloadcsi.m">
+      </FileRef>
+      <FileRef
+         location = "group:parxloadfid.m">
+      </FileRef>
+      <FileRef
+         location = "group:parxloadinfo.m">
+      </FileRef>
+      <FileRef
+         location = "group:parxloadmrs.m">
+      </FileRef>
+      <FileRef
+         location = "group:parxloadmrsfid.m">
+      </FileRef>
+      <FileRef
+         location = "group:parxloadpc.m">
+      </FileRef>
+      <FileRef
+         location = "group:parxloadpcnav.m">
+      </FileRef>
+      <FileRef
+         location = "group:parxls.m">
+      </FileRef>
+      <FileRef
+         location = "group:parxlsepi.m">
+      </FileRef>
+      <FileRef
+         location = "group:parxmrsrecon.m">
+      </FileRef>
+      <FileRef
+         location = "group:parxphaseroll.m">
+      </FileRef>
+      <FileRef
+         location = "group:parxplotmrs.m">
+      </FileRef>
+      <FileRef
+         location = "group:parxrecon.m">
+      </FileRef>
+      <FileRef
+         location = "group:parxreport.m">
+      </FileRef>
+      <FileRef
+         location = "group:parxscanreport.m">
+      </FileRef>
+      <FileRef
+         location = "group:parxstudyreport.m">
+      </FileRef>
+      <FileRef
+         location = "group:parxstudytime.m">
+      </FileRef>
+      <FileRef
+         location = "group:parxsummary.m">
+      </FileRef>
+      <FileRef
+         location = "group:parxtextread.m">
+      </FileRef>
+      <Group
+         location = "group:psq"
+         name = "psq">
+         <FileRef
+            location = "group:bmatcalc.m">
+         </FileRef>
+         <FileRef
+            location = "group:Contents.m">
+         </FileRef>
+         <FileRef
+            location = "group:DW_SE.m">
+         </FileRef>
+         <FileRef
+            location = "group:DW_SE_opts.m">
+         </FileRef>
+         <FileRef
+            location = "group:DW_STE.m">
+         </FileRef>
+         <FileRef
+            location = "group:DW_STE_opts.m">
+         </FileRef>
+         <FileRef
+            location = "group:DW_UFLARE.m">
+         </FileRef>
+         <FileRef
+            location = "group:dw_uflare.mat">
+         </FileRef>
+         <FileRef
+            location = "group:DW_UFLARE_opts.m">
+         </FileRef>
+         <FileRef
+            location = "group:dwufl.m">
+         </FileRef>
+         <FileRef
+            location = "group:GradTrap.m">
+         </FileRef>
+         <FileRef
+            location = "group:InitIC.m">
+         </FileRef>
+         <FileRef
+            location = "group:InitV.m">
+         </FileRef>
+         <FileRef
+            location = "group:JMT_DDR.m">
+         </FileRef>
+         <FileRef
+            location = "group:JMT_DDR_opts.m">
+         </FileRef>
+         <FileRef
+            location = "group:JMT_DR.m">
+         </FileRef>
+         <FileRef
+            location = "group:JMT_DR_opts.m">
+         </FileRef>
+         <FileRef
+            location = "group:JMT_HYPER.m">
+         </FileRef>
+         <FileRef
+            location = "group:JMT_HYPER_opts.m">
+         </FileRef>
+         <FileRef
+            location = "group:Mt.mat">
+         </FileRef>
+         <FileRef
+            location = "group:Precess.m">
+         </FileRef>
+         <FileRef
+            location = "group:psq.m">
+         </FileRef>
+         <FileRef
+            location = "group:psqbmatrix.m">
+         </FileRef>
+         <FileRef
+            location = "group:psqmkopts.m">
+         </FileRef>
+         <FileRef
+            location = "group:psqplotwaveforms.m">
+         </FileRef>
+         <FileRef
+            location = "group:RF.m">
+         </FileRef>
+         <FileRef
+            location = "group:RFWave.m">
+         </FileRef>
+         <FileRef
+            location = "group:SpinEcho.m">
+         </FileRef>
+         <FileRef
+            location = "group:spinecho.mat">
+         </FileRef>
+         <FileRef
+            location = "group:SpinEcho_opts.m">
+         </FileRef>
+         <FileRef
+            location = "group:SSFP.m">
+         </FileRef>
+         <FileRef
+            location = "group:SSFP_opts.m">
+         </FileRef>
+         <FileRef
+            location = "group:UFLARE.m">
+         </FileRef>
+         <FileRef
+            location = "group:uflare.mat">
+         </FileRef>
+         <FileRef
+            location = "group:UFLARE_opts.m">
+         </FileRef>
+      </Group>
+      <FileRef
+         location = "group:pv2fsl.m">
+      </FileRef>
+      <FileRef
+         location = "group:pvbmatrix.m">
+      </FileRef>
+      <FileRef
+         location = "group:pvhardifsl.m">
+      </FileRef>
+      <FileRef
+         location = "group:pvmcsiautophase.m">
+      </FileRef>
+      <FileRef
+         location = "group:pvmcsiphaseroll.m">
+      </FileRef>
+      <FileRef
+         location = "group:pvmcsirecon.m">
+      </FileRef>
+      <FileRef
+         location = "group:pvmcsitime.m">
+      </FileRef>
+      <FileRef
+         location = "group:pvmdestar.m">
+      </FileRef>
+      <FileRef
+         location = "group:pvmextractrfpulse.m">
+      </FileRef>
+      <FileRef
+         location = "group:pvmkspacebline.m">
+      </FileRef>
+      <FileRef
+         location = "group:pvmload2dseq.m">
+      </FileRef>
+      <FileRef
+         location = "group:pvmloadfid.m">
+      </FileRef>
+      <FileRef
+         location = "group:pvmloadinfo.m">
+      </FileRef>
+      <FileRef
+         location = "group:pvmphaseroll.m">
+      </FileRef>
+      <FileRef
+         location = "group:pvmspatfilt.m">
+      </FileRef>
+      <FileRef
+         location = "group:xtime.m">
+      </FileRef>
+   </Group>
+   <Group
+      location = "group:PhaseUnwrap"
+      name = "PhaseUnwrap">
+      <FileRef
+         location = "group:Contents.m">
+      </FileRef>
+      <FileRef
+         location = "group:MEX_Unwrap2D.c">
+      </FileRef>
+      <FileRef
+         location = "group:MEX_Unwrap3D.c">
+      </FileRef>
+      <FileRef
+         location = "group:MEX_Unwrap3D.h">
+      </FileRef>
+      <FileRef
+         location = "group:unwrap2d.m">
+      </FileRef>
+      <FileRef
+         location = "group:unwrap2dstack.m">
+      </FileRef>
+      <FileRef
+         location = "group:unwrap3d.m">
+      </FileRef>
+   </Group>
+   <FileRef
+      location = "group:README.md">
+   </FileRef>
+   <Group
+      location = "group:RelaxFit"
+      name = "RelaxFit">
+      <FileRef
+         location = "group:adcfitn.m">
+      </FileRef>
+      <FileRef
+         location = "group:ClampImage.m">
+      </FileRef>
+      <FileRef
+         location = "group:irfit.m">
+      </FileRef>
+      <FileRef
+         location = "group:irfitn.m">
+      </FileRef>
+      <FileRef
+         location = "group:irnull.m">
+      </FileRef>
+      <FileRef
+         location = "group:logfitn.m">
+      </FileRef>
+      <FileRef
+         location = "group:lsq_absircontrast.m">
+      </FileRef>
+      <FileRef
+         location = "group:lsq_ircontrast.m">
+      </FileRef>
+      <FileRef
+         location = "group:lsq_srcontrast.m">
+      </FileRef>
+      <FileRef
+         location = "group:lsq_t2contrast.m">
+      </FileRef>
+      <FileRef
+         location = "group:mefit.m">
+      </FileRef>
+      <FileRef
+         location = "group:mefitn.m">
+      </FileRef>
+      <FileRef
+         location = "group:PhantomSolutions.m">
+      </FileRef>
+      <FileRef
+         location = "group:ScaleImage.m">
+      </FileRef>
+      <FileRef
+         location = "group:srfit.m">
+      </FileRef>
+      <FileRef
+         location = "group:srfitim.m">
+      </FileRef>
+      <FileRef
+         location = "group:srfitn.m">
+      </FileRef>
+      <FileRef
+         location = "group:srfitseries.m">
+      </FileRef>
+      <FileRef
+         location = "group:srfittest.m">
+      </FileRef>
+      <FileRef
+         location = "group:T1Fit.m">
+      </FileRef>
+      <FileRef
+         location = "group:t1fit_vtr.m">
+      </FileRef>
+      <FileRef
+         location = "group:T1func.m">
+      </FileRef>
+      <FileRef
+         location = "group:T1residual.m">
+      </FileRef>
+      <FileRef
+         location = "group:T1test.m">
+      </FileRef>
+      <FileRef
+         location = "group:t2contrast.m">
+      </FileRef>
+      <FileRef
+         location = "group:t2fit.m">
+      </FileRef>
+      <FileRef
+         location = "group:t2fit_msme.m">
+      </FileRef>
+      <FileRef
+         location = "group:t2fitn.m">
+      </FileRef>
+      <FileRef
+         location = "group:t2fitn_ms.m">
+      </FileRef>
+   </Group>
+   <Group
+      location = "group:RF_Pulses"
+      name = "RF_Pulses">
+      <FileRef
+         location = "group:b1slr.m">
+      </FileRef>
+      <Group
+         location = "group:BlochSim"
+         name = "BlochSim">
+         <FileRef
+            location = "group:AxT2.jpg">
+         </FileRef>
+         <FileRef
+            location = "group:bloch.m">
+         </FileRef>
+         <FileRef
+            location = "group:bloch_mex.c">
+         </FileRef>
+         <FileRef
+            location = "group:blochiso.c">
+         </FileRef>
+         <FileRef
+            location = "group:blochrfsim.m">
+         </FileRef>
+         <FileRef
+            location = "group:blochsim.m">
+         </FileRef>
+         <FileRef
+            location = "group:kspacesim.m">
+         </FileRef>
+         <FileRef
+            location = "group:Mt.mat">
+         </FileRef>
+         <FileRef
+            location = "group:SpherePhantom.m">
+         </FileRef>
+      </Group>
+      <FileRef
+         location = "group:loadrho.m">
+      </FileRef>
+      <FileRef
+         location = "group:rfb1.m">
+      </FileRef>
+      <FileRef
+         location = "group:rfb1all.m">
+      </FileRef>
+      <FileRef
+         location = "group:rfb1res.m">
+      </FileRef>
+      <Group
+         location = "group:SpectralSpatialPulses"
+         name = "SpectralSpatialPulses">
+         <FileRef
+            location = "group:fslr.m">
+         </FileRef>
+         <FileRef
+            location = "group:ReadSSmxy.m">
+         </FileRef>
+         <FileRef
+            location = "group:ReadSSPars.m">
+         </FileRef>
+         <FileRef
+            location = "group:ReadSSrms.m">
+         </FileRef>
+         <FileRef
+            location = "group:SS.m">
+         </FileRef>
+         <FileRef
+            location = "group:SSBlochSim.m">
+         </FileRef>
+         <FileRef
+            location = "group:SSgradient.m">
+         </FileRef>
+         <FileRef
+            location = "group:SSktraj.m">
+         </FileRef>
+         <FileRef
+            location = "group:SSPlot.m">
+         </FileRef>
+         <FileRef
+            location = "group:SSpulse.m">
+         </FileRef>
+         <FileRef
+            location = "group:SSRadialHamming.m">
+         </FileRef>
+         <FileRef
+            location = "group:SSrefocus.m">
+         </FileRef>
+         <FileRef
+            location = "group:SSresponse.m">
+         </FileRef>
+         <FileRef
+            location = "group:SSRotate.m">
+         </FileRef>
+         <FileRef
+            location = "group:SStest.m">
+         </FileRef>
+      </Group>
+   </Group>
+   <Group
+      location = "group:ROIgui"
+      name = "ROIgui">
+      <FileRef
+         location = "group:roi.m">
+      </FileRef>
+      <FileRef
+         location = "group:roi_drawroi.m">
+      </FileRef>
+      <FileRef
+         location = "group:roi_gui.fig">
+      </FileRef>
+      <FileRef
+         location = "group:roi_gui.m">
+      </FileRef>
+      <FileRef
+         location = "group:roi_init.m">
+      </FileRef>
+      <FileRef
+         location = "group:roi_load.m">
+      </FileRef>
+      <FileRef
+         location = "group:roi_save.m">
+      </FileRef>
+      <FileRef
+         location = "group:roi_updateimage.m">
+      </FileRef>
+      <FileRef
+         location = "group:roi_updateinfo.m">
+      </FileRef>
+      <FileRef
+         location = "group:roi_updatemontage.m">
+      </FileRef>
+   </Group>
+   <Group
+      location = "group:SphHarm"
+      name = "SphHarm">
+      <FileRef
+         location = "group:sh.m">
+      </FileRef>
+      <FileRef
+         location = "group:shcart.m">
+      </FileRef>
+      <FileRef
+         location = "group:shexp.m">
+      </FileRef>
+      <FileRef
+         location = "group:shfit.m">
+      </FileRef>
+      <FileRef
+         location = "group:shfittest.m">
+      </FileRef>
+      <FileRef
+         location = "group:shshow.m">
+      </FileRef>
+      <FileRef
+         location = "group:shsum.m">
+      </FileRef>
+      <FileRef
+         location = "group:shtest.m">
+      </FileRef>
+   </Group>
+   <Group
+      location = "group:SSFP"
+      name = "SSFP">
+      <FileRef
+         location = "group:spgr_err.m">
+      </FileRef>
+      <FileRef
+         location = "group:spgreq.m">
+      </FileRef>
+      <FileRef
+         location = "group:spgrfit.m">
+      </FileRef>
+      <FileRef
+         location = "group:spgrtest.m">
+      </FileRef>
+      <FileRef
+         location = "group:ssfpsim.m">
+      </FileRef>
+   </Group>
+   <Group
+      location = "group:Stats"
+      name = "Stats">
+      <FileRef
+         location = "group:anova_eta2.m">
+      </FileRef>
+      <FileRef
+         location = "group:anova_partial_eta2.m">
+      </FileRef>
+      <FileRef
+         location = "group:cohens_d.m">
+      </FileRef>
+      <FileRef
+         location = "group:eta2_to_cohen_d.m">
+      </FileRef>
+      <FileRef
+         location = "group:fdr_bh.m">
+      </FileRef>
+      <FileRef
+         location = "group:fdr_bh_license.txt">
+      </FileRef>
+      <FileRef
+         location = "group:iqr.m">
+      </FileRef>
+      <FileRef
+         location = "group:lr.m">
+      </FileRef>
+      <FileRef
+         location = "group:mad.m">
+      </FileRef>
+      <FileRef
+         location = "group:mycdf.m">
+      </FileRef>
+      <FileRef
+         location = "group:percentile.m">
+      </FileRef>
+      <FileRef
+         location = "group:rms.m">
+      </FileRef>
+      <FileRef
+         location = "group:snr.m">
+      </FileRef>
+      <FileRef
+         location = "group:stderr.m">
+      </FileRef>
+   </Group>
+</Workspace>
